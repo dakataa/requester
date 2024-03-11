@@ -1,0 +1,40 @@
+{
+  "name": "requester",
+  "version": "1.0.0",
+  "description": "Fetch API Simplifying library",
+  "main": "dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dakataa/requester.git"
+  },
+  "keywords": [
+    "fetch",
+    "api",
+    "simple",
+    "promise"
+  ],
+  "author": "Yordan Lazarov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dakataa/requester/issues"
+  },
+  "homepage": "https://github.com/dakataa/requester#readme",
+  "dependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "watch": "^1.0.2"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.4.0",
+    "tsup": "^8.0.2"
+  }
+}
