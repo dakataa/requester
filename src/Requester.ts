@@ -145,8 +145,17 @@ class Requester {
         });
     }
 
-    get(url: string, params: any) {
+    get(url: string, query: StandardObjectType | URLSearchParams) {
 
+        if(!(query instanceof URLSearchParams)) {
+            query = convertObjectToURLSearchParams(query);
+        }
+
+        return this.fetch({
+            url,
+            method: Method.GET,
+            query
+        });
     }
 }
 

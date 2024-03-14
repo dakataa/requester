@@ -81,7 +81,7 @@ declare class Requester {
     static off(interceptorId: number): void;
     fetch({ url, method, body, query, signal, auth, headers }: Request): Promise<RequesterResponse>;
     post(url: string, body?: FormData | string | StandardObjectType, bodyType?: RequestBodyType): Promise<RequesterResponse>;
-    get(url: string, params: any): void;
+    get(url: string, query: StandardObjectType | URLSearchParams): Promise<RequesterResponse>;
 }
 
 export { InterceptEvent, Method, RequestBodyType, Requester as default };

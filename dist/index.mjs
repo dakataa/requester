@@ -379,7 +379,16 @@ var _Requester = /*#__PURE__*/ function() {
         },
         {
             key: "get",
-            value: function get(url, params) {}
+            value: function get(url, query) {
+                if (!_instanceof(query, URLSearchParams)) {
+                    query = convertObjectToURLSearchParams(query);
+                }
+                return this.fetch({
+                    url: url,
+                    method: Method_default.GET,
+                    query: query
+                });
+            }
         }
     ], [
         {
