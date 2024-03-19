@@ -197,6 +197,15 @@ __export(src_exports, {
     RequestBodyType: function() {
         return RequestBodyType_default;
     },
+    convertFormDataToObject: function() {
+        return convertFormDataToObject;
+    },
+    convertObjectToFormData: function() {
+        return convertObjectToFormData;
+    },
+    convertObjectToURLSearchParams: function() {
+        return convertObjectToURLSearchParams;
+    },
     default: function() {
         return src_default;
     }
@@ -484,6 +493,9 @@ var src_default = Requester_default;
 0 && (module.exports = {
     InterceptEvent: InterceptEvent,
     Method: Method,
-    RequestBodyType: RequestBodyType
+    RequestBodyType: RequestBodyType,
+    convertFormDataToObject: convertFormDataToObject,
+    convertObjectToFormData: convertObjectToFormData,
+    convertObjectToURLSearchParams: convertObjectToURLSearchParams
 });
 //# sourceMappingURL=index.js.map

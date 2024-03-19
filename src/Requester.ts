@@ -159,4 +159,6 @@ class Requester {
     }
 }
 
+export {convertObjectToURLSearchParams, convertObjectToFormData, convertFormDataToObject};
+
 export default Requester;
