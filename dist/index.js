@@ -206,6 +206,9 @@ __export(src_exports, {
     convertObjectToURLSearchParams: function() {
         return convertObjectToURLSearchParams;
     },
+    convertURLSearchParamsToObject: function() {
+        return convertURLSearchParamsToObject;
+    },
     default: function() {
         return src_default;
     }
@@ -336,6 +339,26 @@ var convertObjectToURLSearchParams = function(data) {
     var formData = convertObjectToFormData(data);
     return new URLSearchParams(Object.fromEntries(formData.entries()));
 };
+var convertURLSearchParamsToObject = function(searchData) {
+    var data = {};
+    searchData.forEach(function(value, originalKey) {
+        console.log("value", value, originalKey);
+        var keys = originalKey.match(/\w+/gi);
+        var lastKey = Object.create(keys).pop();
+        var nested = data;
+        (keys || []).forEach(function(key) {
+            if (key === lastKey) {
+                nested[key] = originalKey.match(/\[]$/i) ? Object.assign(nested[key] || [], [
+                    value
+                ]) : value;
+            } else {
+                nested[key] = nested[key] || {};
+                nested = nested[key];
+            }
+        });
+    });
+    return data;
+};
 // src/Requester.ts
 var _Requester = /*#__PURE__*/ function() {
     function _Requester(config) {
@@ -350,7 +373,6 @@ var _Requester = /*#__PURE__*/ function() {
                 var _this_config;
                 url = new URL(url, ((_this_config = this.config) === null || _this_config === void 0 ? void 0 : _this_config.baseURL) || void 0);
                 var search = new URLSearchParams(_object_spread({}, Object.fromEntries(_instanceof(query, URLSearchParams) ? query : new URLSearchParams(query)), Object.fromEntries(url.searchParams), new URLSearchParams((auth === null || auth === void 0 ? void 0 : auth.getQuery()) || {})));
-                console.log("search", search.toString());
                 url.search = search.toString();
                 var abortController = new AbortController();
                 var options = {
@@ -496,6 +518,7 @@ var src_default = Requester_default;
     RequestBodyType: RequestBodyType,
     convertFormDataToObject: convertFormDataToObject,
     convertObjectToFormData: convertObjectToFormData,
-    convertObjectToURLSearchParams: convertObjectToURLSearchParams
+    convertObjectToURLSearchParams: convertObjectToURLSearchParams,
+    convertURLSearchParamsToObject: convertURLSearchParamsToObject
 });
 //# sourceMappingURL=index.js.map

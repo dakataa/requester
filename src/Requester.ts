@@ -4,7 +4,7 @@ import Response from "@src/Response";
 import InterceptEvent from "@src/enum/InterceptEvent";
 import RequestBodyType, {RequestBodyTypeHeaders} from "@src/enum/RequestBodyType";
 import Config from "@src/type/Config";
-import {convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams} from "@src/helper/DataHelper";
+import {convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject} from "@src/helper/DataHelper";
 import StandardObjectType from "@src/type/StandardObjectType";
 
 class Requester {
@@ -49,8 +49,6 @@ class Requester {
                 ...(new URLSearchParams(auth?.getQuery() || {}))
             }
         );
-
-        console.log('search', search.toString());
 
         url.search = search.toString();
 
@@ -159,6 +157,6 @@ class Requester {
     }
 }
 
-export {convertObjectToURLSearchParams, convertObjectToFormData, convertFormDataToObject};
+export {convertObjectToURLSearchParams, convertObjectToFormData, convertFormDataToObject, convertURLSearchParamsToObject};
 
 export default Requester;

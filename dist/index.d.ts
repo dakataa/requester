@@ -75,6 +75,7 @@ type Config = {
 declare const convertFormDataToObject: (formData: FormData) => StandardObjectType;
 declare const convertObjectToFormData: (data: StandardObjectType, formData?: FormData, parentKeys?: string[]) => FormData;
 declare const convertObjectToURLSearchParams: (data: StandardObjectType) => URLSearchParams;
+declare const convertURLSearchParamsToObject: (searchData: URLSearchParams) => object;
 
 declare class Requester {
     private static interceptors;
@@ -88,4 +89,4 @@ declare class Requester {
     get(url: string, query: StandardObjectType | URLSearchParams): Promise<RequesterResponse>;
 }
 
-export { InterceptEvent, Method, RequestBodyType, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, Requester as default };
+export { InterceptEvent, Method, RequestBodyType, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject, Requester as default };

@@ -1,5 +1,4 @@
 import StandardObjectType from "@src/type/StandardObjectType";
-import standardObjectType from "@src/type/StandardObjectType";
 
 const convertFormDataToObject = (formData: FormData): StandardObjectType => {
     let data: StandardObjectType = {};
@@ -40,8 +39,27 @@ const convertObjectToFormData = (data: StandardObjectType, formData?: FormData, 
 
 const convertObjectToURLSearchParams = (data: StandardObjectType): URLSearchParams => {
     const formData = convertObjectToFormData(data);
-    return new URLSearchParams(Object.fromEntries(formData.entries()) as standardObjectType)
+    return new URLSearchParams(Object.fromEntries(formData.entries()) as StandardObjectType)
 }
 
+const convertURLSearchParamsToObject = (searchData: URLSearchParams): object => {
+    let data: object = {};
+    searchData.forEach((value, originalKey) => {
+        console.log('value', value, originalKey);
+        const keys = originalKey.match(/\w+/gi)
+        const lastKey = Object.create(keys).pop();
+        let nested:{[key: string]: any} = data;
+        (keys || []).forEach((key) => {
+            if (key === lastKey) {
+                nested[key as keyof object] = originalKey.match(/\[]$/i) ? Object.assign(nested[key as keyof object] || [], [value]) : value;
+            } else {
+                nested[key as keyof object] = (nested[key as keyof object] || {});
+                nested = nested[key as keyof object];
+            }
+        });
+    });
 
-export {convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams};
+    return data;
+};
+
+export {convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject};

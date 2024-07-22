@@ -12,7 +12,7 @@ class BearerToken extends AbstractAuthorization {
         this.token = token;
     }
 
-    getHeaders(): { [p: string]: string | number } {
+    getHeaders(): { [p: string]: string } {
         return {
             Authorization: 'Bearer ' + this.token
         };
