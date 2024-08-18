@@ -150,7 +150,7 @@ var __export = function(target, all) {
     });
 };
 var __copyProps = function(to, from, except, desc) {
-    if (from && typeof from === "object" || typeof from === "function") {
+    if (from && (typeof from === "undefined" ? "undefined" : _type_of(from)) === "object" || typeof from === "function") {
         var _iteratorNormalCompletion = true, _didIteratorError = false, _iteratorError = undefined;
         try {
             var _loop = function() {
@@ -279,7 +279,6 @@ var RequestBodyType = /* @__PURE__ */ function(RequestBodyType2) {
 }(RequestBodyType || {});
 var _obj;
 var RequestBodyTypeHeaders = (_obj = {}, _define_property(_obj, "form-data" /* FormData */ , {
-    "Content-Type": "multipart/form-data"
 }), _define_property(_obj, "x-www-form-urlencoded" /* Urlencoded */ , {
     "Content-Type": "application/x-www-form-urlencoded"
 }), _define_property(_obj, "raw-json" /* JSON */ , {

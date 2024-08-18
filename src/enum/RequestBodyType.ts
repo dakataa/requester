@@ -11,7 +11,6 @@ enum RequestBodyType {
 
 const RequestBodyTypeHeaders: { [key: string]: { [key: string]: string } } = {
     [RequestBodyType.FormData]: {
-        'Content-Type': 'multipart/form-data'
     },
     [RequestBodyType.Urlencoded]: {
         'Content-Type': 'application/x-www-form-urlencoded'

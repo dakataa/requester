@@ -204,7 +204,6 @@ var RequestBodyType = /* @__PURE__ */ function(RequestBodyType2) {
 }(RequestBodyType || {});
 var _obj;
 var RequestBodyTypeHeaders = (_obj = {}, _define_property(_obj, "form-data" /* FormData */ , {
-    "Content-Type": "multipart/form-data"
 }), _define_property(_obj, "x-www-form-urlencoded" /* Urlencoded */ , {
     "Content-Type": "application/x-www-form-urlencoded"
 }), _define_property(_obj, "raw-json" /* JSON */ , {
