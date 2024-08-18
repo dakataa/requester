@@ -25,7 +25,7 @@ const convertObjectToFormData = (data: StandardObjectType, formData?: FormData, 
     for (let key in data) {
         const value: any = data[key];
         const keyPath = [...(parentKeys || []), key];
-        if (value instanceof Object) {
+        if (value instanceof Object && !(value instanceof File)) {
             formData = convertObjectToFormData(value, formData, keyPath);
             continue;
         }

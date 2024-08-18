@@ -203,8 +203,7 @@ var RequestBodyType = /* @__PURE__ */ function(RequestBodyType2) {
     return RequestBodyType2;
 }(RequestBodyType || {});
 var _obj;
-var RequestBodyTypeHeaders = (_obj = {}, _define_property(_obj, "form-data" /* FormData */ , {
-}), _define_property(_obj, "x-www-form-urlencoded" /* Urlencoded */ , {
+var RequestBodyTypeHeaders = (_obj = {}, _define_property(_obj, "form-data" /* FormData */ , {}), _define_property(_obj, "x-www-form-urlencoded" /* Urlencoded */ , {
     "Content-Type": "application/x-www-form-urlencoded"
 }), _define_property(_obj, "raw-json" /* JSON */ , {
     "Content-Type": "application/json"
@@ -248,7 +247,7 @@ var convertObjectToFormData = function(data, formData, parentKeys) {
         var keyPath = _to_consumable_array(parentKeys || []).concat([
             key
         ]);
-        if (_instanceof(value, Object)) {
+        if (_instanceof(value, Object) && !_instanceof(value, File)) {
             formData = convertObjectToFormData(value, formData, keyPath);
             continue;
         }
@@ -367,6 +366,7 @@ var _Requester = /*#__PURE__*/ function() {
                             break;
                         }
                 }
+                console.log("pre", bodyObject);
                 var formData = bodyObject ? convertObjectToFormData(bodyObject) : null;
                 switch(bodyType){
                     case RequestBodyType_default.Urlencoded:
