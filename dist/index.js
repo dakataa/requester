@@ -370,7 +370,7 @@ var _Requester = /*#__PURE__*/ function() {
             key: "fetch",
             value: function fetch1(param) {
                 var url = param.url, _param_method = param.method, method = _param_method === void 0 ? Method_default.GET : _param_method, body = param.body, query = param.query, signal = param.signal, auth = param.auth, headers = param.headers;
-                var _this_config;
+                var _this_config, _this_config1;
                 url = new URL(url, ((_this_config = this.config) === null || _this_config === void 0 ? void 0 : _this_config.baseURL) || void 0);
                 var search = new URLSearchParams(_object_spread({}, Object.fromEntries(_instanceof(query, URLSearchParams) ? query : new URLSearchParams(query)), Object.fromEntries(url.searchParams), new URLSearchParams((auth === null || auth === void 0 ? void 0 : auth.getQuery()) || {})));
                 url.search = search.toString();
@@ -378,7 +378,7 @@ var _Requester = /*#__PURE__*/ function() {
                 var options = {
                     signal: signal || abortController.signal,
                     method: method || Method_default.GET,
-                    headers: _object_spread({}, headers, (auth === null || auth === void 0 ? void 0 : auth.getHeaders()) || {}, this.config.headers || {})
+                    headers: _object_spread({}, headers || {}, (auth === null || auth === void 0 ? void 0 : auth.getHeaders()) || {}, ((_this_config1 = this.config) === null || _this_config1 === void 0 ? void 0 : _this_config1.headers) || {})
                 };
                 switch(method){
                     case Method_default.POST:

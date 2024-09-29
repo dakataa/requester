@@ -57,10 +57,10 @@ class Requester {
             signal: signal || abortController.signal,
             method: method || Method.GET,
             headers: {
-                ...headers,
+                ...(headers || {}),
                 ...(auth?.getHeaders() || {}),
-                ...(this.config.headers || {})
-            } || {}
+                ...(this.config?.headers || {})
+            }
         };
 
         switch (method) {
