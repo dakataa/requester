@@ -1,7 +1,9 @@
 enum Method {
     POST = 'POST',
     GET = 'GET',
-    PUT = 'PUT'
+    PUT = 'PUT',
+    DELETE = 'DELETE',
+    PATCH = 'PATCH'
 }
 
 export default Method;

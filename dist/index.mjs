@@ -143,6 +143,8 @@ var Method = /* @__PURE__ */ function(Method2) {
     Method2["POST"] = "POST";
     Method2["GET"] = "GET";
     Method2["PUT"] = "PUT";
+    Method2["DELETE"] = "DELETE";
+    Method2["PATCH"] = "PATCH";
     return Method2;
 }(Method || {});
 var Method_default = Method;
@@ -366,7 +368,6 @@ var _Requester = /*#__PURE__*/ function() {
                             break;
                         }
                 }
-                console.log("pre", bodyObject);
                 var formData = bodyObject ? convertObjectToFormData(bodyObject) : null;
                 switch(bodyType){
                     case RequestBodyType_default.Urlencoded:

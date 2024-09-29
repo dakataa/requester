@@ -20,7 +20,9 @@ interface AuthorizationInterface {
 declare enum Method {
     POST = "POST",
     GET = "GET",
-    PUT = "PUT"
+    PUT = "PUT",
+    DELETE = "DELETE",
+    PATCH = "PATCH"
 }
 
 type Request = {
