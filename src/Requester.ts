@@ -18,7 +18,7 @@ class Requester {
     private config: Config;
 
     constructor(config?: Config) {
-        this.config = config || Requester.defaults;
+        this.config = {...config, ...Requester.defaults};
     }
 
     static on(event: InterceptEvent, callable: Function): number {
@@ -44,7 +44,7 @@ class Requester {
 
         url = new URL(url, this.config?.baseURL || undefined);
         const search = new URLSearchParams({
-                ...Object.fromEntries(query instanceof URLSearchParams ? query : new URLSearchParams(query)),
+                ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
                 ...(Object.fromEntries((url as URL).searchParams)),
                 ...(new URLSearchParams(auth?.getQuery() || {}))
             }

@@ -29,7 +29,7 @@ type Request = {
     url: URL | string;
     method?: Method;
     body?: any;
-    query?: StandardObjectType | URLSearchParams;
+    query?: StandardObjectType | URLSearchParams | FormData;
     signal?: AbortSignal | null;
     auth?: AuthorizationInterface | null;
     headers?: {

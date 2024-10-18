@@ -289,7 +289,7 @@ var _Requester = /*#__PURE__*/ function() {
     "use strict";
     function _Requester(config) {
         _class_call_check(this, _Requester);
-        this.config = config || _Requester.defaults;
+        this.config = _object_spread({}, config, _Requester.defaults);
     }
     _create_class(_Requester, [
         {
@@ -298,7 +298,7 @@ var _Requester = /*#__PURE__*/ function() {
                 var url = param.url, _param_method = param.method, method = _param_method === void 0 ? Method_default.GET : _param_method, body = param.body, query = param.query, signal = param.signal, auth = param.auth, headers = param.headers;
                 var _this_config, _this_config1;
                 url = new URL(url, ((_this_config = this.config) === null || _this_config === void 0 ? void 0 : _this_config.baseURL) || void 0);
-                var search = new URLSearchParams(_object_spread({}, Object.fromEntries(_instanceof(query, URLSearchParams) ? query : new URLSearchParams(query)), Object.fromEntries(url.searchParams), new URLSearchParams((auth === null || auth === void 0 ? void 0 : auth.getQuery()) || {})));
+                var search = new URLSearchParams(_object_spread({}, query ? Object.fromEntries(_instanceof(query, URLSearchParams) ? query : _instanceof(query, FormData) ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query)) : {}, Object.fromEntries(url.searchParams), new URLSearchParams((auth === null || auth === void 0 ? void 0 : auth.getQuery()) || {})));
                 url.search = search.toString();
                 var abortController = new AbortController();
                 var options = {
