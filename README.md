@@ -4,10 +4,10 @@ Requester is created to help using Fetch API.
 ### Installing
 
 #### Using npm:
-npm install ....
+npm install @dakataa/requester
 
 #### Using yarn:
-yarn add ....
+yarn add @dakataa/requester
 
 
 ### Config
