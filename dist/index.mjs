@@ -225,20 +225,25 @@ var RequestBodyType_default = RequestBodyType;
 var convertFormDataToObject = function(formData) {
     var data = {};
     formData.forEach(function(value, originalKey) {
-        var keys = originalKey.match(/\w+/gi);
-        var lastKey = Object.create(keys).pop();
+        var _originalKey_match;
+        var keys = (_originalKey_match = originalKey.match(/\w+/gi)) !== null && _originalKey_match !== void 0 ? _originalKey_match : [];
+        if (!keys.length) {
+            throw new Error("Invalid Form Data Key: " + originalKey);
+        }
+        var lastKey = keys.pop();
+        var isArray = originalKey.endsWith("[]");
         var nested = data;
         (keys || []).forEach(function(key) {
-            if (key === lastKey) {
-                var _nested_key;
-                nested[key] = originalKey.match(/\[]$/i) ? Object.assign((_nested_key = nested[key]) !== null && _nested_key !== void 0 ? _nested_key : [], [
-                    value
-                ]) : value;
-            } else {
-                nested[key] = nested[key] || {};
-                nested = nested[key];
-            }
+            var _nested_key;
+            nested[key] = _object_spread({}, (_nested_key = nested[key]) !== null && _nested_key !== void 0 ? _nested_key : {});
+            nested = nested[key];
         });
+        if (lastKey) {
+            var _nested_lastKey;
+            nested[lastKey] = isArray ? _to_consumable_array((_nested_lastKey = nested[lastKey]) !== null && _nested_lastKey !== void 0 ? _nested_lastKey : []).concat([
+                value
+            ]) : value;
+        }
     });
     return data;
 };

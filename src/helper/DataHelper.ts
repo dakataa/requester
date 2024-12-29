@@ -1,19 +1,24 @@
 import StandardObjectType from "@src/type/StandardObjectType";
 
 const convertFormDataToObject = (formData: FormData): StandardObjectType => {
-    let data: StandardObjectType = {};
-    formData.forEach((value, originalKey) => {
-        const keys = originalKey.match(/\w+/gi)
-        const lastKey = Object.create(keys).pop();
-        let nested = data;
-        (keys || []).forEach((key) => {
-            if (key === lastKey) {
-                nested[key] = originalKey.match(/\[]$/i) ? Object.assign(nested[key] ?? [], [value]) : value;
-            } else {
-                nested[key] = (nested[key] || {});
-                nested = nested[key];
-            }
+    const data: StandardObjectType = {};
+    formData.forEach(function (value, originalKey) {
+        const keys = originalKey.match(/\w+/gi) ?? [];
+        if (!keys.length) {
+            throw new Error('Invalid Form Data Key: ' + originalKey);
+        }
+        const lastKey = keys.pop();
+        const isArray = originalKey.endsWith('[]');
+
+        let nested: any = data;
+        (keys || []).forEach(function (key) {
+            nested[key] = {...(nested[key] ?? {})};
+            nested = nested[key];
         });
+
+        if (lastKey) {
+            nested[lastKey] = isArray ? [...(nested[lastKey] ?? []), value] : value;
+        }
     });
 
     return data;
