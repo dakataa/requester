@@ -1,5 +1,4 @@
 import AppendParameterTo from "@src/enum/AppendParameterTo";
-import appendParameterTo from "@src/enum/AppendParameterTo";
 import AbstractAuthorization from "@src/component/authorization/AbstractAuthorization";
 
 class BearerToken extends AbstractAuthorization {
@@ -19,3 +18,5 @@ class BearerToken extends AbstractAuthorization {
     }
 
 }
+
+export default BearerToken;

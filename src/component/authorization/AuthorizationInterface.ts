@@ -4,7 +4,7 @@ import StandardObjectType from "@src/type/StandardObjectType";
 interface AuthorizationInterface {
     appendTo: AppendParameterTo;
 
-    getHeaders(): { [key: string]: string }
+    getHeaders(): { [key: string]: string | number }
 
     getQuery(): StandardObjectType;
 

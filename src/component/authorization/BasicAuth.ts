@@ -21,3 +21,6 @@ class BasicAuth extends AbstractAuthorization {
     }
 
 }
+
+
+export default BasicAuth;

@@ -36,3 +36,5 @@ class APIKey extends AbstractAuthorization {
         return this.getBody();
     }
 }
+
+export default APIKey;

@@ -50,7 +50,6 @@ const convertObjectToURLSearchParams = (data: StandardObjectType): URLSearchPara
 const convertURLSearchParamsToObject = (searchData: URLSearchParams): object => {
     let data: object = {};
     searchData.forEach((value, originalKey) => {
-        console.log('value', value, originalKey);
         const keys = originalKey.match(/\w+/gi)
         const lastKey = Object.create(keys).pop();
         let nested:{[key: string]: any} = data;

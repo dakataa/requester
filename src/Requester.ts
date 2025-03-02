@@ -43,6 +43,8 @@ class Requester {
           }: Request): Promise<Response> {
 
         url = new URL(url, this.config?.baseURL || undefined);
+        auth ??= this.config?.authorization;
+
         const search = new URLSearchParams({
                 ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
                 ...(Object.fromEntries((url as URL).searchParams)),

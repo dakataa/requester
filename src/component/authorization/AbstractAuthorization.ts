@@ -9,7 +9,7 @@ abstract class AbstractAuthorization implements AuthorizationInterface {
         return {};
     }
 
-    getHeaders(): { [key: string]: string } {
+    getHeaders(): { [key: string]: string | number } {
         return {};
     }
 
