@@ -376,9 +376,9 @@ var convertURLSearchParamsToObject = function(searchData) {
 // src/Requester.ts
 var _Requester = /*#__PURE__*/ function() {
     "use strict";
-    function _Requester(config) {
+    function _Requester(config, namespace) {
         _class_call_check(this, _Requester);
-        this.config = _object_spread({}, config, _Requester.defaults);
+        this.config = _object_spread({}, config, namespace && _Requester.namespace[namespace] ? _Requester.namespace[namespace] : _Requester.defaults);
     }
     _create_class(_Requester, [
         {
@@ -394,7 +394,6 @@ var _Requester = /*#__PURE__*/ function() {
                 var options = {
                     signal: signal || abortController.signal,
                     method: method || Method_default.GET,
-                    // ...(auth ? { credentials: 'include' } : {}),
                     headers: _object_spread({}, headers || {}, (auth === null || auth === void 0 ? void 0 : auth.getHeaders()) || {}, ((_this_config2 = this.config) === null || _this_config2 === void 0 ? void 0 : _this_config2.headers) || {})
                 };
                 switch(method){
@@ -524,6 +523,7 @@ _Requester.interceptors = [];
 _Requester.defaults = {
     timeout: 3e3
 };
+_Requester.namespace = {};
 var Requester = _Requester;
 var Requester_default = Requester;
 // src/enum/AppendParameterTo.ts

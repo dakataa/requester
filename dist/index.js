@@ -271,8 +271,8 @@ var __toCommonJS = function(mod) {
     }), mod);
 };
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
     APIKey: function() {
         return APIKey_default;
     },
@@ -307,7 +307,7 @@ __export(src_exports, {
         return Requester_default;
     }
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 // src/enum/Method.ts
 var Method = /* @__PURE__ */ function(Method2) {
     Method2["POST"] = "POST";
@@ -459,9 +459,9 @@ var convertURLSearchParamsToObject = function(searchData) {
 };
 // src/Requester.ts
 var _Requester = /*#__PURE__*/ function() {
-    function _Requester(config) {
+    function _Requester(config, namespace) {
         _class_call_check(this, _Requester);
-        this.config = _object_spread({}, config, _Requester.defaults);
+        this.config = _object_spread({}, config, namespace && _Requester.namespace[namespace] ? _Requester.namespace[namespace] : _Requester.defaults);
     }
     _create_class(_Requester, [
         {
@@ -477,7 +477,6 @@ var _Requester = /*#__PURE__*/ function() {
                 var options = {
                     signal: signal || abortController.signal,
                     method: method || Method_default.GET,
-                    // ...(auth ? { credentials: 'include' } : {}),
                     headers: _object_spread({}, headers || {}, (auth === null || auth === void 0 ? void 0 : auth.getHeaders()) || {}, ((_this_config2 = this.config) === null || _this_config2 === void 0 ? void 0 : _this_config2.headers) || {})
                 };
                 switch(method){
@@ -607,6 +606,7 @@ _Requester.interceptors = [];
 _Requester.defaults = {
     timeout: 3e3
 };
+_Requester.namespace = {};
 var Requester = _Requester;
 var Requester_default = Requester;
 // src/enum/AppendParameterTo.ts

@@ -1,6 +1,6 @@
 {
   "name": "@dakataa/requester",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Fetch API Simplifying library",
   "main": "dist/index.js",
   "module": "./dist/index.mjs",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@swc/core": "^1.4.0",
-    "tsup": "^8.0.2",
+    "tsup": "8.3.5",
     "watch": "^1.0.2"
   }
 }

@@ -22,9 +22,9 @@ Config Object keys.
 
 Authorization Object
 
-| Key       | Default | Required | Description                    |
-|-----------|---------|----------|--------------------------------|
-| appliedTo |         | Yes      |  Enum:  |
+| Key       | Default | Required | Description |
+|-----------|---------|----------|-------------|
+| appliedTo |         | Yes      | Enum:       |
 
 
 #### Configuration
@@ -41,6 +41,18 @@ Requester.defaults = {
 };
 ```
 
+Multi Namespace Global Configuration combination with default global
+
+```typescript
+import Requester from 'requester';
+import BearerToken from "./BearerToken";
+
+Requester.namespace["secure_area"] = {
+    authorization: new BearerToken('Token')
+};
+
+(new Requester({}, 'secure_area')).post().then();
+```
 
 ### Examples
 

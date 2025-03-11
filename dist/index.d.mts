@@ -82,8 +82,11 @@ declare const convertURLSearchParamsToObject: (searchData: URLSearchParams) => o
 declare class Requester {
     private static interceptors;
     static defaults: Config;
+    static namespace: {
+        [key: string]: Config;
+    };
     private config;
-    constructor(config?: Config);
+    constructor(config?: Config, namespace?: string);
     static on(event: InterceptEvent, callable: Function): number;
     static off(interceptorId: number): void;
     fetch({ url, method, body, query, signal, auth, headers }: Request): Promise<RequesterResponse>;
