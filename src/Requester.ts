@@ -15,10 +15,12 @@ class Requester {
         timeout: 3000
     };
 
+    static namespace: {[key: string]: Config} = {};
+
     private config: Config;
 
-    constructor(config?: Config) {
-        this.config = {...config, ...Requester.defaults};
+    constructor(config?: Config, namespace?: string) {
+        this.config = {...config, ...(namespace && Requester.namespace[namespace] ? Requester.namespace[namespace] : Requester.defaults)};
     }
 
     static on(event: InterceptEvent, callable: Function): number {
