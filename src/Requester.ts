@@ -147,9 +147,9 @@ class Requester {
         });
     }
 
-    get(url: string, query: StandardObjectType | URLSearchParams) {
+    get(url: string, query?: StandardObjectType | URLSearchParams) {
 
-        if(!(query instanceof URLSearchParams)) {
+        if(query && !(query instanceof URLSearchParams)) {
             query = convertObjectToURLSearchParams(query);
         }
 
