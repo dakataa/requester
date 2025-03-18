@@ -17,6 +17,7 @@ import BasicAuth from "@src/component/authorization/BasicAuth";
 import APIKey from "@src/component/authorization/APIKey";
 import AuthorizationInterface from "@src/component/authorization/AuthorizationInterface";
 import HttpException from "@src/type/HttpException";
+import Response from "@src/Response";
 
 export {
     Requester as default,
@@ -29,7 +30,8 @@ export {
     RequestBodyType,
     BearerToken,
     BasicAuth,
-    APIKey
+    APIKey,
+    Response
 };
 
 export type {
