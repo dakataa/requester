@@ -44,14 +44,29 @@ Requester.defaults = {
 Multi Namespace Global Configuration combination with default global
 
 ```typescript
-import Requester from 'requester';
-import BearerToken from "./BearerToken";
+import Requester, {BearerToken, PostRequestConfig} from "@dakataa/requester";
+
+Requester.defaults = {
+    baseURL: 'https://example-api.com',
+};
 
 Requester.namespace["secure_area"] = {
     authorization: new BearerToken('Token')
 };
 
-(new Requester({}, 'secure_area')).post().then();
+(new Requester({}, 'secure_area')).post({
+    url: '',
+    body: {}, // json, binary, xml, ,
+    bodyType: '' // Request Body Type - FormData, JSON, Binary etc..
+}).then();
+
+// or 
+
+Requester.instance('secure_area').post(PostRequestConfig).then();
+
+// or just
+
+Requester.post({url: 'https://', ...}).then()
 ```
 
 ### Examples
@@ -61,16 +76,19 @@ Requester.namespace["secure_area"] = {
 ```typescript
 import response from "./Response";
 
-(new Requester()).post('/post/endpoint-path', {
-    form: {
-        key1: 'value',
-        key2: {name: 'Yordan'},
-        key3: ['example', 'array']
+Requester.instance().post({
+    url: '/post/endpoint-path', 
+	body: {
+        form: {
+            key1: 'value',
+            key2: {name: 'Yordan'},
+            key3: ['example', 'array']
+        }
     }
 }).then((response) => {
     const status = response.status;
 
-    response.getData().then(v => setData(v));
+    console.log('data', response.data);
 }).catch((e) => {
     console.log('error', e);
 });
