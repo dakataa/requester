@@ -27,8 +27,12 @@ Requester.defaults = {
 Multi Namespace Global Configuration combination with default global
 
 ```typescript
-import Requester, {BearerToken, PostRequestConfig, Response} from "@dakataa/requester";
-import Config from "./Config";
+import Requester, {
+    Config,
+    BearerToken,
+    PostRequestConfig,
+    Response
+} from "@dakataa/requester";
 
 Requester.defaults = {
     baseURL: 'https://example-api.com',
@@ -47,7 +51,7 @@ Requester.namespace["secure_area"] = {
     console.log(data)
 });
 
-// with instance static method
+// with  static method `instance`
 
 Requester.instance('secure_area').post({
     url: '/path/to/endpoint',
@@ -58,7 +62,7 @@ Requester.instance('secure_area').post({
 
 });
 
-// with method shortcut
+// with aliased request method
 
 Requester.post({
     url: '/path/to/endpoint',
@@ -74,9 +78,15 @@ Requester.post({
 
 ### Methods
 
+- post([PostRequestConfig])
+- get([GetRequestConfig](#GetRequestConfig))
+- fetch([Request](#Request))
+
+
 ### Request method aliases
 For convenience, aliases have been provided for all common request methods.
 
+- Requester.instance([InstanceConfig](#InstanceConfig))
 - Requester.post([PostRequestConfig](#PostRequestConfig) & [InstanceConfig](#InstanceConfig)
 - Requester.get([GetRequestConfig](#GetRequestConfig) & [InstanceConfig](#InstanceConfig))
 
@@ -113,6 +123,18 @@ For convenience, aliases have been provided for all common request methods.
 | url      | string                                                                                                     | Yes      | Full URL or Pathname |
 | query    | [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams), Object ([key: value]) | No       | URL Query Parameters |
 
+### Request
+
+| Key      | Type                                | Description                |
+|----------|-------------------------------------|----------------------------|
+| url      | number, URL                         |                            |
+| method   | Method                              | Request METHOD             |
+| body     | Any                                 | Request BODY               |
+| query    | Object, URLSearchParams, FormData   | URL Query Parameters       |
+| signal   | AbortSignal                         | Fetch Request Abort Signal |
+| headers  | Object                              | Request Headers            |
+| timeout  | number                              | Request Timeout            |
+
 
 ### Response
 
@@ -120,7 +142,6 @@ For convenience, aliases have been provided for all common request methods.
 |--------|--------|--------------------------------------------------------|
 | status | number | Response Status Code (200, 400, etc...)                |
 | data   | any    | Response Data (JSON, Text) depends on response headers |
-
 
 
 ## Enums
