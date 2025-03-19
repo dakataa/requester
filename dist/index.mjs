@@ -448,6 +448,12 @@ var _Requester = /*#__PURE__*/ function() {
                     }).finally(function() {
                         return clearTimeout(timeoutInterval);
                     });
+                }).then(function(response) {
+                    return new Promise(function(resolve) {
+                        return response.getResponseData().then(function(data) {
+                            resolve(response);
+                        });
+                    });
                 });
             }
         },
@@ -496,12 +502,6 @@ var _Requester = /*#__PURE__*/ function() {
                     method: Method_default.POST,
                     body: body,
                     headers: RequestBodyTypeHeaders[bodyType]
-                }).then(function(response) {
-                    return new Promise(function(resolve) {
-                        return response.getResponseData().then(function(data) {
-                            resolve(response);
-                        });
-                    });
                 });
             }
         },
@@ -516,12 +516,6 @@ var _Requester = /*#__PURE__*/ function() {
                     url: url,
                     method: Method_default.GET,
                     query: query
-                }).then(function(response) {
-                    return new Promise(function(resolve) {
-                        return response.getResponseData().then(function(data) {
-                            resolve(response);
-                        });
-                    });
                 });
             }
         }

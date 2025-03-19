@@ -95,11 +95,11 @@ For convenience, aliases have been provided for all common request methods.
 
 ### Config
 
-| Key           | Type                    | Default | Required | Description                 |
-|---------------|-------------------------|---------|----------|-----------------------------|
-| baseURL       | string                  |         | No       | Base URL to create Endpoint |
-| authorization | AuthorizationInterface  |         | No       | Authorization Object.       |
-| headers       | array                   |         | No       | List of HTTP Headers.       |
+| Key           | Type                                                                                           | Default | Required | Description                 |
+|---------------|------------------------------------------------------------------------------------------------|---------|----------|-----------------------------|
+| baseURL       | string                                                                                         |         | No       | Base URL to create Endpoint |
+| authorization | Authorization Object ([BearerToken](#BearerToken), [BasicAuth](#BasicAuth), [APIKey](#APIKey)) |         | No       | Authorization Object.       |
+| headers       | array                                                                                          |         | No       | List of HTTP Headers.       |
 
 ### InstanceConfig
 
@@ -162,6 +162,39 @@ Every RequestBodyType send the body with corresponding request headers.
 | Binary     | raw (binary)          | Request Body          |
 
 
+## Authorization
+This classes helps you to authorize.
+We have some basic implementation. You can implement yours.
+
+### BearerToken
+This class apply Bearer token to headers in your request.
+
+| Argument | Type   | Description  |
+|----------|--------|--------------|
+| token    | string | Access Token |
+
+### BasicAuth
+This class apply basic Authorization header with base64 encoded combination of username and password.
+
+| Argument | Type   | Description |
+|----------|--------|-------------|
+| username | string |             |
+| password | string |             |
+
+### APIKey
+This class apply custom Header with *key* and *value* you have set.
+
+| Argument | Type   | Description |
+|----------|--------|-------------|
+| key      | string | X-API-Key   |
+| value    | string | Token       |
+
+
+Example: 
+```typescript
+new BearerToken('token')
+```
+
 ### Examples
 
 ### POST Request
@@ -184,3 +217,23 @@ Requester.instance().post({
     console.log('error', e);
 });
 ```
+
+## Changelog
+
+For a detailed list of changes, see the [CHANGELOG](CHANGELOG.md) file.
+
+
+## FAQ
+
+### How do I set a custom base URL?
+You can set a custom base URL using the `defaults` configuration:
+
+```typescript
+Requester.defaults = {
+    baseURL: 'https://my-custom-api.com'
+};
+```
+
+### Can I use this library in Node.js?
+This library is designed for use in browser environments. 
+For Node.js, consider using libraries like axios or node-fetch.

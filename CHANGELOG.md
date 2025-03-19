@@ -1,9 +1,9 @@
 # 2.0.0
 ## Breaking Changes
 ### Core
-- Method `Requester.post` now accept only one argument of type `PostRequestConfig` which contains all needed arguments.
-- Method `Requester.get` now accept only one argument of type `GetRequestConfig` which contains all needed arguments.
-- Added new *static* method `Requester.instance` for easy instance initialization.
-- Added new *static* method `Requester.post`.
-- Added new type `PostRequestConfig`, used for POST request configuration.
-- Added new type `GetRequestConfig`, used for GET request configuration.
+- The `Requester.post` method now accepts only one argument of type `PostRequestConfig`, which contains all the necessary parameters.
+- The `Requester.get` method now accepts only one argument of type `GetRequestConfig`, which contains all the necessary parameters.
+- Added a new static method `Requester.instance` for easier instance initialization.
+- Added a new static method `Requester.post`.
+- Added a new type `PostRequestConfig` for configuring POST requests.
+- Added a new type `GetRequestConfig` for configuring GET requests.
