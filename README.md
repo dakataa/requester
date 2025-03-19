@@ -1,21 +1,25 @@
 # Requester
-Requester is created to help using Fetch API.
+This library is created to help using [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
 
-### Installing
+## Installing
 
 #### Using npm:
+```shell
 npm install @dakataa/requester
+```
 
 #### Using yarn:
+```shell
 yarn add @dakataa/requester
+```
 
-#### Configuration
+### Configuration
 
 
-Default Global ([Config](#config))
+#### Default Configuration ([Config](#config))
+This configuration is applied to all instances.
+
 ```typescript
-import Requester from 'requester';
-
 Requester.defaults = {
     baseURL: 'https://example-api.com',
     headers: {
@@ -24,24 +28,17 @@ Requester.defaults = {
 };
 ```
 
-Multi Namespace Global Configuration combination with default global
+#### Multi-space Configuration
 
-```typescript
-import Requester, {
-    Config,
-    BearerToken,
-    PostRequestConfig,
-    Response
-} from "@dakataa/requester";
-
-Requester.defaults = {
-    baseURL: 'https://example-api.com',
-};
-
+Setup:
+```php
 Requester.namespace["secure_area"] = {
     authorization: new BearerToken('Token')
 };
+```
 
+How to use it: 
+```typescript
 (new Requester({}, 'secure_area')).post({
     url: '',
     body: {
@@ -50,9 +47,11 @@ Requester.namespace["secure_area"] = {
 }).then(({status, data}) => {
     console.log(data)
 });
+```
 
-// with  static method `instance`
+or with  static method **instance()**
 
+```typescript
 Requester.instance('secure_area').post({
     url: '/path/to/endpoint',
     body: {
@@ -61,9 +60,11 @@ Requester.instance('secure_area').post({
 }).then((data: Response) => {
 
 });
+```
 
-// with aliased request method
+with aliased request method
 
+```typescript
 Requester.post({
     url: '/path/to/endpoint',
     body: {
@@ -78,7 +79,7 @@ Requester.post({
 
 ### Methods
 
-- post([PostRequestConfig])
+- post([PostRequestConfig](#PostRequestConfig))
 - get([GetRequestConfig](#GetRequestConfig))
 - fetch([Request](#Request))
 

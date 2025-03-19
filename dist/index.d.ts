@@ -171,4 +171,4 @@ type HttpException = {
     message: string;
 };
 
-export { APIKey, type AccessToken, type AuthorizationInterface, BasicAuth, BearerToken, type Config, type GetRequestConfig, type HttpException, InterceptEvent, Method, type PostRequestConfig, type Request, RequestBodyType, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject, Requester as default };
+export { APIKey, type AccessToken, type AuthorizationInterface, BasicAuth, BearerToken, type Config, type GetRequestConfig, type HttpException, InterceptEvent, Method, type PostRequestConfig, type Request, RequestBodyType, RequesterResponse as Response, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject, Requester as default };

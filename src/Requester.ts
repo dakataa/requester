@@ -99,7 +99,7 @@ class Requester {
             options = callback(options);
         });
 
-        return new Promise((resolve, reject) => {
+        return new Promise<Response>((resolve, reject) => {
             fetch(url, options)
                 .then(response => {
                     Requester.interceptors.filter(([i]) => i === InterceptEvent.PRE_RESPONSE).forEach(([i, callback]) => {
@@ -114,6 +114,10 @@ class Requester {
                 })
                 .catch((error) => reject(error))
                 .finally(() => clearTimeout(timeoutInterval));
+        }).then((response) => {
+            return new Promise<Response>((resolve) => response.getResponseData().then((data) => {
+                resolve(response)
+            }))
         });
     }
 
@@ -161,10 +165,6 @@ class Requester {
             method: Method.POST,
             body,
             headers: RequestBodyTypeHeaders[bodyType]
-        }).then((response) => {
-            return new Promise<Response>((resolve) => response.getResponseData().then((data) => {
-                resolve(response)
-            }))
         });
     }
 
@@ -177,10 +177,6 @@ class Requester {
             url,
             method: Method.GET,
             query
-        }).then((response) => {
-            return new Promise<Response>((resolve) => response.getResponseData().then((data) => {
-                resolve(response)
-            }))
         });
     }
 
