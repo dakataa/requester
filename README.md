@@ -1,7 +1,27 @@
 # Requester
-This library is created to help using [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
+The library is a utility designed to simplify HTTP requests using the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
+It provides a clean and flexible interface for making `GET`, `POST`, and other HTTP requests, with support for various request body types, authorization mechanisms, and interceptors.
 
-## Installing
+### Table of Contents
+1. [Installation](#installation)
+2. [Usage](#usage)
+	- [Basic Example](#basic-example)
+	- [Configuration](#configuration)
+	- [Authorization](#authorization)
+	- [Interceptors](#interceptors)
+3. [API Reference](#api-reference)
+	- [Requester Class](#requester-class)
+	- [Enums](#enums)
+	- [Utility Functions](#utility-functions)
+4. [Examples](#examples)
+	- [Making a GET Request](#making-a-get-request)
+	- [Making a POST Request](#making-a-post-request)
+	- [Using Authorization](#using-authorization)
+5. [Error Handling](#error-handling)
+6. [Contributing](#contributing)
+7. [License](#license)
+
+## Installation
 
 #### Using npm:
 ```shell
@@ -77,11 +97,29 @@ Requester.post({
 });
 ```
 
-### Methods
+## API Reference
 
-- post([PostRequestConfig](#PostRequestConfig))
-- get([GetRequestConfig](#GetRequestConfig))
-- fetch([Request](#Request))
+### Requester Class
+
+#### Methods
+
+- **`fetch(config: Request): Promise<Response>`**  
+  Makes an HTTP request based on the provided configuration.
+
+- **`post(config: PostRequestConfig): Promise<Response>`**  
+  Makes a `POST` request.
+
+- **`get(config: GetRequestConfig): Promise<Response>`**  
+  Makes a `GET` request.
+
+- **`static instance(config?: InstanceConfig): Requester`**  
+  Creates a new `Requester` instance with the provided configuration.
+
+- **`static on(event: InterceptEvent, callback: Function): number`**  
+  Adds an interceptor for the specified event.
+
+- **`static off(interceptorId: number): void`**  
+  Removes an interceptor by its ID.
 
 
 ### Request method aliases
