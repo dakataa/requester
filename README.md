@@ -107,22 +107,22 @@ Requester.post({
 
 #### Methods
 
-- **`fetch(config: Request): Promise<Response>`**  
+- **fetch(config: [Request](#request)): Promise<[Response](#response)>**
   Makes an HTTP request based on the provided configuration.
 
-- **`post(config: PostRequestConfig): Promise<Response>`**  
+- **post(config: [PostRequestConfig](#postrequestconfig)): Promise<[Response](#response)>**
   Makes a `POST` request.
 
-- **`get(config: GetRequestConfig): Promise<Response>`**  
+- **get(config: [GetRequestConfig](#getrequestconfig)): Promise<[Response](#response)>**
   Makes a `GET` request.
 
-- **`static instance(config?: InstanceConfig): Requester`**  
+- **static instance(config?: [InstanceConfig](#instanceconfig)): Requester**
   Creates a new `Requester` instance with the provided configuration.
 
-- **`static on(event: InterceptEvent, callback: Function): number`**  
+- **static on(event: [InterceptEvent](#interceptevent), callback: Function): number**
   Adds an interceptor for the specified event.
 
-- **`static off(interceptorId: number): void`**  
+- **static off(interceptorId: number): void**
   Removes an interceptor by its ID.
 
 
@@ -188,6 +188,14 @@ For convenience, aliases have been provided for all common request methods.
 
 
 ## Enums
+
+### InterceptEvent
+| Case            | Description               |
+|-----------------|---------------------------|
+| PRE_REQUEST     | FormData                  |
+| PRE_RESPONSE    | Before Response resolving |
+| POST_RESPONSE   | After Response resolving  |
+
 
 ### RequestBodyType
 Every RequestBodyType send the body with corresponding request headers.
