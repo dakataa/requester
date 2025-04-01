@@ -1,4 +1,4 @@
-export type AccessToken = {
+type AccessToken = {
     access_token: string;
     refresh_token: string | null;
     token_type: string;

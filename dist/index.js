@@ -291,6 +291,9 @@ __export(index_exports, {
     RequestBodyType: function() {
         return RequestBodyType_default;
     },
+    Response: function() {
+        return Response_default;
+    },
     convertFormDataToObject: function() {
         return convertFormDataToObject;
     },
@@ -327,8 +330,8 @@ var RequesterResponse = /*#__PURE__*/ function() {
     }
     _create_class(RequesterResponse, [
         {
-            key: "getData",
-            value: function getData() {
+            key: "getResponseData",
+            value: function getResponseData() {
                 var _this = this;
                 return new Promise(function(resolve, reject) {
                     var _this_response_headers_get;
@@ -340,6 +343,18 @@ var RequesterResponse = /*#__PURE__*/ function() {
                         resolve(_this.data);
                     });
                 });
+            }
+        },
+        {
+            key: "getData",
+            value: function getData() {
+                return this.data;
+            }
+        },
+        {
+            key: "setData",
+            value: function setData(data) {
+                this.data = data;
             }
         },
         {
@@ -461,7 +476,7 @@ var convertURLSearchParamsToObject = function(searchData) {
 var _Requester = /*#__PURE__*/ function() {
     function _Requester(config, namespace) {
         _class_call_check(this, _Requester);
-        this.config = _object_spread({}, config, namespace && _Requester.namespace[namespace] ? _Requester.namespace[namespace] : _Requester.defaults);
+        this.config = _object_spread({}, _Requester.defaults, config !== null && config !== void 0 ? config : {}, namespace && _Requester.namespace[namespace] ? _Requester.namespace[namespace] : {});
     }
     _create_class(_Requester, [
         {
@@ -519,12 +534,19 @@ var _Requester = /*#__PURE__*/ function() {
                     }).finally(function() {
                         return clearTimeout(timeoutInterval);
                     });
+                }).then(function(response) {
+                    return new Promise(function(resolve) {
+                        return response.getResponseData().then(function(data) {
+                            resolve(response);
+                        });
+                    });
                 });
             }
         },
         {
             key: "post",
-            value: function post(url, body, bodyType) {
+            value: function post(param) {
+                var url = param.url, body = param.body, bodyType = param.bodyType;
                 var bodyObject = null;
                 bodyType || (bodyType = RequestBodyType_default.JSON);
                 switch(typeof body === "undefined" ? "undefined" : _type_of(body)){
@@ -571,8 +593,9 @@ var _Requester = /*#__PURE__*/ function() {
         },
         {
             key: "get",
-            value: function get(url, query) {
-                if (!_instanceof(query, URLSearchParams)) {
+            value: function get(param) {
+                var url = param.url, query = param.query;
+                if (query && !_instanceof(query, URLSearchParams)) {
                     query = convertObjectToURLSearchParams(query);
                 }
                 return this.fetch({
@@ -583,6 +606,12 @@ var _Requester = /*#__PURE__*/ function() {
             }
         }
     ], [
+        {
+            key: "instance",
+            value: function instance(args) {
+                return new _Requester(args === null || args === void 0 ? void 0 : args.config, args === null || args === void 0 ? void 0 : args.namespace);
+            }
+        },
         {
             key: "on",
             value: function on(event, callable) {
@@ -597,6 +626,33 @@ var _Requester = /*#__PURE__*/ function() {
             value: function off(interceptorId) {
                 if (this.interceptors[interceptorId] === void 0) return;
                 this.interceptors.splice(interceptorId, 1);
+            }
+        },
+        {
+            key: "post",
+            value: function post(param) {
+                var url = param.url, body = param.body, bodyType = param.bodyType, namespace = param.namespace, config = param.config;
+                return this.instance({
+                    namespace: namespace,
+                    config: config
+                }).post({
+                    url: url,
+                    body: body,
+                    bodyType: bodyType
+                });
+            }
+        },
+        {
+            key: "get",
+            value: function get(param) {
+                var url = param.url, query = param.query, namespace = param.namespace, config = param.config;
+                return this.instance({
+                    namespace: namespace,
+                    config: config
+                }).get({
+                    url: url,
+                    query: query
+                });
             }
         }
     ]);
@@ -741,6 +797,7 @@ var APIKey_default = APIKey;
     InterceptEvent: InterceptEvent,
     Method: Method,
     RequestBodyType: RequestBodyType,
+    Response: Response,
     convertFormDataToObject: convertFormDataToObject,
     convertObjectToFormData: convertObjectToFormData,
     convertObjectToURLSearchParams: convertObjectToURLSearchParams,

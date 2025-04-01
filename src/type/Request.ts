@@ -2,7 +2,7 @@ import AuthorizationInterface from "@src/component/authorization/AuthorizationIn
 import Method from "@src/enum/Method";
 import StandardObjectType from "@src/type/StandardObjectType";
 
-export type Request = {
+type Request = {
     url: URL | string;
     method?: Method;
     body?: any;

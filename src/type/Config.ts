@@ -1,6 +1,6 @@
 import AuthorizationInterface from "@src/component/authorization/AuthorizationInterface";
 
-export type Config = {
+type Config = {
     baseURL?: URL | string;
     authorization?: AuthorizationInterface;
     headers?: {[key:string]: string};

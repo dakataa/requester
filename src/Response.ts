@@ -8,7 +8,7 @@ class RequesterResponse {
         this.status = response.status;
     }
 
-    getData(): Promise<any> {
+    getResponseData(): Promise<any> {
         return new Promise((resolve, reject) => {
             if(this.data) {
                 return resolve(this.data);
@@ -19,6 +19,14 @@ class RequesterResponse {
                 resolve(this.data);
             })
         });
+    }
+
+    getData(): any {
+        return this.data;
+    }
+
+    setData(data: any) {
+        this.data = data;
     }
 
     getHeaders(): Headers {

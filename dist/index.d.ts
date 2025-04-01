@@ -43,7 +43,9 @@ declare class RequesterResponse {
     status: number;
     data: any;
     constructor(response: Response);
-    getData(): Promise<any>;
+    getResponseData(): Promise<any>;
+    getData(): any;
+    setData(data: any): void;
     getHeaders(): Headers;
 }
 
@@ -53,6 +55,20 @@ declare enum InterceptEvent {
     PRE_RESPONSE = 2,
     POST_RESPONSE = 3
 }
+
+type Config = {
+    baseURL?: URL | string;
+    authorization?: AuthorizationInterface;
+    headers?: {
+        [key: string]: string;
+    };
+    timeout?: number;
+};
+
+type InstanceConfig = {
+    config?: Config;
+    namespace?: string;
+};
 
 declare enum RequestBodyType {
     FormData = "form-data",
@@ -65,13 +81,15 @@ declare enum RequestBodyType {
     Binary = "binary"
 }
 
-type Config = {
-    baseURL?: URL | string;
-    authorization?: AuthorizationInterface;
-    headers?: {
-        [key: string]: string;
-    };
-    timeout?: number;
+type PostRequestConfig = {
+    url: string;
+    body?: FormData | string | StandardObjectType;
+    bodyType?: RequestBodyType;
+};
+
+type GetRequestConfig = {
+    url: string;
+    query?: StandardObjectType | URLSearchParams;
 };
 
 declare const convertFormDataToObject: (formData: FormData) => StandardObjectType;
@@ -80,19 +98,30 @@ declare const convertObjectToURLSearchParams: (data: StandardObjectType) => URLS
 declare const convertURLSearchParamsToObject: (searchData: URLSearchParams) => object;
 
 declare class Requester {
+    private config;
     private static interceptors;
     static defaults: Config;
     static namespace: {
         [key: string]: Config;
     };
-    private config;
+    static instance(args?: InstanceConfig): Requester;
     constructor(config?: Config, namespace?: string);
     static on(event: InterceptEvent, callable: Function): number;
     static off(interceptorId: number): void;
     fetch({ url, method, body, query, signal, auth, headers }: Request): Promise<RequesterResponse>;
-    post(url: string, body?: FormData | string | StandardObjectType, bodyType?: RequestBodyType): Promise<RequesterResponse>;
-    get(url: string, query: StandardObjectType | URLSearchParams): Promise<RequesterResponse>;
+    post({ url, body, bodyType }: PostRequestConfig): Promise<RequesterResponse>;
+    get({ url, query }: GetRequestConfig): Promise<RequesterResponse>;
+    static post({ url, body, bodyType, namespace, config }: PostRequestConfig & InstanceConfig): Promise<RequesterResponse>;
+    static get({ url, query, namespace, config }: GetRequestConfig & InstanceConfig): Promise<RequesterResponse>;
 }
+
+type AccessToken = {
+    access_token: string;
+    refresh_token: string | null;
+    token_type: string;
+    expires_in: number | null;
+    scope: string[] | null;
+};
 
 declare abstract class AbstractAuthorization implements AuthorizationInterface {
     abstract appendTo: AppendParameterTo;
@@ -135,4 +164,11 @@ declare class APIKey extends AbstractAuthorization {
     };
 }
 
-export { APIKey, BasicAuth, BearerToken, InterceptEvent, Method, RequestBodyType, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject, Requester as default };
+type HttpException = {
+    code: number;
+    status: number;
+    name: string;
+    message: string;
+};
+
+export { APIKey, type AccessToken, type AuthorizationInterface, BasicAuth, BearerToken, type Config, type GetRequestConfig, type HttpException, InterceptEvent, Method, type PostRequestConfig, type Request, RequestBodyType, RequesterResponse as Response, convertFormDataToObject, convertObjectToFormData, convertObjectToURLSearchParams, convertURLSearchParamsToObject, Requester as default };
