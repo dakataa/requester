@@ -4,24 +4,28 @@ It provides a clean and flexible interface for making `GET`, `POST`, and other H
 
 ### Table of Contents
 1. [Installation](#installation)
-2. [Usage](#usage)
-	- [Basic Example](#basic-example)
-	- [Configuration](#configuration)
-	- [Authorization](#authorization)
-	- [Interceptors](#interceptors)
+2. [Configuration](#config)
+   - [Default](#default-configuration-config)
+   - [Namespace](#namespace-configuration)
 3. [API Reference](#api-reference)
-	- [Requester Class](#requester-class)
-	- [Enums](#enums)
-	- [Utility Functions](#utility-functions)
+   - [Requester](#requester-class)
+     - [Method](#methods)
+     - [Static Methods](#request-method-aliases)
+   - [Types](#types) 
+   - [Enums](#enums)
+   - [Classes](#class)
+     - [BearerToken](#bearertoken)
+     - [BasicAuth](#basicauth)
+     - [ApiKey](#apikey)
 4. [Examples](#examples)
-	- [Making a GET Request](#making-a-get-request)
-	- [Making a POST Request](#making-a-post-request)
-	- [Using Authorization](#using-authorization)
-5. [Error Handling](#error-handling)
-6. [Contributing](#contributing)
-7. [License](#license)
+   - [POST Request](#making-a-post-request)
+   - [GET Request](#making-a-get-request)
+   - [Authorization Example](#using-authorization)
+5. [Changelog](#changelog)
+6. [FAQ](#faq)
 
 ## Installation
+Install the library via your preferred package manager:
 
 #### Using npm:
 ```shell
@@ -35,10 +39,9 @@ yarn add @dakataa/requester
 
 ### Configuration
 
-
 #### Default Configuration ([Config](#config))
-This configuration is applied to all instances.
-
+You can set default configuration values that apply to all instances.
+For example: 
 ```typescript
 Requester.defaults = {
     baseURL: 'https://example-api.com',
@@ -48,30 +51,31 @@ Requester.defaults = {
 };
 ```
 
-#### Multi-space Configuration
+#### Namespace Configuration
+The `namespace` feature allows for custom configurations for different use cases or contexts. 
+Each namespace can have its own settings, such as authorization.
 
-Setup:
+#### Example: Setting up a Namespace
 ```php
 Requester.namespace["secure_area"] = {
     authorization: new BearerToken('Token')
 };
 ```
 
-How to use it: 
+#### Example: Setting up a Namespace
 ```typescript
 (new Requester({}, 'secure_area')).post({
-    url: '',
+    url: '/secure-endpoint',
     body: {
         key: 'value'
     }
 }).then(({status, data}) => {
     console.log(data)
 });
-```
 
-or with  static method **instance()**
+// or
 
-```typescript
+// Using the `instance` static method
 Requester.instance('secure_area').post({
     url: '/path/to/endpoint',
     body: {
@@ -82,8 +86,8 @@ Requester.instance('secure_area').post({
 });
 ```
 
-with aliased request method
-
+#### Using Aliased Methods
+The following saves on boilerplate with a single line:
 ```typescript
 Requester.post({
     url: '/path/to/endpoint',
@@ -190,7 +194,7 @@ Every RequestBodyType send the body with corresponding request headers.
 
 | Case       | Type                  | Description           |
 |------------|-----------------------|-----------------------|
-| FormData   | form-data             | Full URL or Pathname  |
+| FormData   | form-data             | FormData              |
 | Urlencoded | x-www-form-urlencoded | Request Body          |
 | JSON       | raw (JSON)            | Send Body as raw JSON |
 | Text       | raw (Text)            | Send Body as raw Text |
@@ -235,10 +239,23 @@ new BearerToken('token')
 
 ### Examples
 
-### POST Request
+### Making a GET Request
 
 ```typescript
-Requester.instance().post({
+Requester.get({
+    url: '/search?id=2',
+	query: { 
+        search: 'term'
+    }
+}).then(({data, status}) => {
+    console.log(status, data);
+})
+```
+
+### Making a POST Request
+
+```typescript
+Requester.post({
     url: '/post/endpoint-path', 
 	body: {
         form: {
@@ -246,14 +263,25 @@ Requester.instance().post({
             key2: {name: 'Yordan'},
             key3: ['example', 'array']
         }
-    }
-}).then((response) => {
-    const status = response.status;
-
-    console.log('data', response.data);
-}).catch((e) => {
-    console.log('error', e);
+    },
+}).then(({data, status}) => {
+    console.log(status, data);
 });
+```
+
+### Using Authorization
+
+```typescript
+import BearerToken from "./BearerToken";
+
+Requester.get({
+    url: '/profile/me',
+    config: {
+        authorization: new BearerToken('token')
+    }
+}).then(({data, status}) => {
+    console.log(status, data);
+})
 ```
 
 ## Changelog
