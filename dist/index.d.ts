@@ -97,8 +97,11 @@ declare const convertObjectToFormData: (data: StandardObjectType, formData?: For
 declare const convertObjectToURLSearchParams: (data: StandardObjectType) => URLSearchParams;
 declare const convertURLSearchParamsToObject: (searchData: URLSearchParams) => object;
 
+type PreRequestCallback = (requestId: number, url: URL | string, options: any) => void;
+type PostResponseCallback = (requestId: number, response: RequesterResponse, url: URL | string, options: any) => void;
 declare class Requester {
     private config;
+    private namespace?;
     private static interceptors;
     static defaults: Config;
     static namespace: {
@@ -106,8 +109,8 @@ declare class Requester {
     };
     static instance(args?: InstanceConfig): Requester;
     constructor(config?: Config, namespace?: string);
-    static on(event: InterceptEvent, callable: Function): number;
-    static off(interceptorId: number): void;
+    static on(event: InterceptEvent, callable: PreRequestCallback | PostResponseCallback, namespace?: string): number;
+    static off(interceptorId: number): typeof Requester;
     fetch({ url, method, body, query, signal, auth, headers }: Request): Promise<RequesterResponse>;
     post({ url, body, bodyType }: PostRequestConfig): Promise<RequesterResponse>;
     get({ url, query }: GetRequestConfig): Promise<RequesterResponse>;

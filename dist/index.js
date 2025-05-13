@@ -477,15 +477,18 @@ var _Requester = /*#__PURE__*/ function() {
     function _Requester(config, namespace) {
         _class_call_check(this, _Requester);
         this.config = _object_spread({}, _Requester.defaults, config !== null && config !== void 0 ? config : {}, namespace && _Requester.namespace[namespace] ? _Requester.namespace[namespace] : {});
+        this.namespace = namespace;
     }
     _create_class(_Requester, [
         {
             key: "fetch",
             value: function fetch1(param) {
+                var _this = this;
                 var url = param.url, _param_method = param.method, method = _param_method === void 0 ? Method_default.GET : _param_method, body = param.body, query = param.query, signal = param.signal, auth = param.auth, headers = param.headers;
                 var _this_config, _this_config1, _this_config2;
                 url = new URL(url, ((_this_config = this.config) === null || _this_config === void 0 ? void 0 : _this_config.baseURL) || void 0);
                 auth !== null && auth !== void 0 ? auth : auth = (_this_config1 = this.config) === null || _this_config1 === void 0 ? void 0 : _this_config1.authorization;
+                var requestId = Math.floor(Math.random() * Date.now());
                 var search = new URLSearchParams(_object_spread({}, query ? Object.fromEntries(_instanceof(query, URLSearchParams) ? query : _instanceof(query, FormData) ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query)) : {}, Object.fromEntries(url.searchParams), new URLSearchParams((auth === null || auth === void 0 ? void 0 : auth.getQuery()) || {})));
                 url.search = search.toString();
                 var abortController = new AbortController();
@@ -505,30 +508,23 @@ var _Requester = /*#__PURE__*/ function() {
                 var timeoutInterval = setTimeout(function() {
                     return abortController === null || abortController === void 0 ? void 0 : abortController.abort();
                 }, this.config.timeout || 3e4);
-                _Requester.interceptors.filter(function(param) {
-                    var _param = _sliced_to_array(param, 1), i = _param[0];
-                    return i === InterceptEvent_default.PRE_REQUEST;
+                Object.values(_Requester.interceptors).filter(function(param) {
+                    var _param = _sliced_to_array(param, 3), event = _param[0], namespace = _param[2];
+                    return (namespace === void 0 || namespace === _this.namespace) && event === InterceptEvent_default.PRE_REQUEST;
                 }).forEach(function(param) {
-                    var _param = _sliced_to_array(param, 2), i = _param[0], callback = _param[1];
-                    options = callback(options);
+                    var _param = _sliced_to_array(param, 2), callback = _param[1];
+                    callback(requestId, url, options);
                 });
                 return new Promise(function(resolve, reject) {
                     fetch(url, options).then(function(response) {
-                        _Requester.interceptors.filter(function(param) {
-                            var _param = _sliced_to_array(param, 1), i = _param[0];
-                            return i === InterceptEvent_default.PRE_RESPONSE;
+                        Object.values(_Requester.interceptors).filter(function(param) {
+                            var _param = _sliced_to_array(param, 3), event = _param[0], namespace = _param[2];
+                            return (namespace === void 0 || namespace === _this.namespace) && event === InterceptEvent_default.PRE_RESPONSE;
                         }).forEach(function(param) {
-                            var _param = _sliced_to_array(param, 2), i = _param[0], callback = _param[1];
-                            response = callback(response);
+                            var _param = _sliced_to_array(param, 2), callback = _param[1];
+                            callback(requestId, response, url, options);
                         });
                         resolve(new Response_default(response));
-                        _Requester.interceptors.filter(function(param) {
-                            var _param = _sliced_to_array(param, 1), i = _param[0];
-                            return i === InterceptEvent_default.POST_RESPONSE;
-                        }).forEach(function(param) {
-                            var _param = _sliced_to_array(param, 2), i = _param[0], callback = _param[1];
-                            response = callback(response);
-                        });
                     }).catch(function(error) {
                         return reject(error);
                     }).finally(function() {
@@ -536,8 +532,15 @@ var _Requester = /*#__PURE__*/ function() {
                     });
                 }).then(function(response) {
                     return new Promise(function(resolve) {
-                        return response.getResponseData().then(function(data) {
+                        return response.getResponseData().then(function() {
                             resolve(response);
+                            Object.values(_Requester.interceptors).filter(function(param) {
+                                var _param = _sliced_to_array(param, 3), event = _param[0], namespace = _param[2];
+                                return (namespace === void 0 || namespace === _this.namespace) && event === InterceptEvent_default.POST_RESPONSE;
+                            }).forEach(function(param) {
+                                var _param = _sliced_to_array(param, 2), callback = _param[1];
+                                callback(requestId, response, url, options);
+                            });
                         });
                     });
                 });
@@ -614,18 +617,23 @@ var _Requester = /*#__PURE__*/ function() {
         },
         {
             key: "on",
-            value: function on(event, callable) {
-                return this.interceptors.push([
+            value: function on(event, callable, namespace) {
+                var id = Math.floor(Math.random() * Date.now());
+                this.interceptors[id] = [
                     event,
-                    callable
-                ]);
+                    callable,
+                    namespace
+                ];
+                return id;
             }
         },
         {
             key: "off",
             value: function off(interceptorId) {
-                if (this.interceptors[interceptorId] === void 0) return;
-                this.interceptors.splice(interceptorId, 1);
+                if (this.interceptors[interceptorId] !== void 0) {
+                    delete this.interceptors[interceptorId];
+                }
+                return this;
             }
         },
         {
@@ -658,7 +666,7 @@ var _Requester = /*#__PURE__*/ function() {
     ]);
     return _Requester;
 }();
-_Requester.interceptors = [];
+_Requester.interceptors = {};
 _Requester.defaults = {
     timeout: 3e3
 };
