@@ -1,6 +1,6 @@
 # 2.0.1
 ## Changes
-
+- Add new Intercept Event `Error` triggered on canceling request or exception.
 
 # 2.0.0
 ## Breaking Changes

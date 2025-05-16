@@ -19,6 +19,8 @@ import {
 type PreRequestCallback = (requestId: number, url: URL | string, options: any) => void;
 type PreResponseCallback = (requestId: number, response: globalThis.Response, url: URL | string, options: any) => void;
 type PostResponseCallback = (requestId: number, response: Response, url: URL | string, options: any) => void;
+type ErrorCallback = (requestId: number, reason: any, url: URL | string, options: any) => void;
+
 
 class Requester {
 
@@ -27,7 +29,7 @@ class Requester {
 
     private static interceptors: {[key: number]: [
         InterceptEvent,
-        (PreRequestCallback | PostResponseCallback | PreResponseCallback),
+        (PreRequestCallback | PostResponseCallback | PreResponseCallback | ErrorCallback),
         (string | undefined)
     ]} = {};
 
@@ -141,6 +143,14 @@ class Requester {
                     (callback as PostResponseCallback)(requestId, response, url, options);
                 });
             }))
+        }).catch((reason) => {
+            Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.ERROR;
+            }).forEach(([, callback]) => {
+                (callback as ErrorCallback)(requestId, reason, url, options);
+            });
+
+            return Promise.reject(reason);
         });
     }
 
@@ -191,7 +201,7 @@ class Requester {
         });
     }
 
-    get({url, query}: GetRequestConfig) {
+    get({url, query, signal}: GetRequestConfig) {
         if (query && !(query instanceof URLSearchParams)) {
             query = convertObjectToURLSearchParams(query);
         }
@@ -199,7 +209,8 @@ class Requester {
         return this.fetch({
             url,
             method: Method.GET,
-            query
+            query,
+            signal
         });
     }
 

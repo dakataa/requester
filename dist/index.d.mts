@@ -53,7 +53,8 @@ declare enum InterceptEvent {
     PRE_REQUEST = 0,
     POST_REQUEST = 1,
     PRE_RESPONSE = 2,
-    POST_RESPONSE = 3
+    POST_RESPONSE = 3,
+    ERROR = 4
 }
 
 type Config = {
@@ -90,6 +91,7 @@ type PostRequestConfig = {
 type GetRequestConfig = {
     url: string;
     query?: StandardObjectType | URLSearchParams;
+    signal?: AbortSignal;
 };
 
 declare const convertFormDataToObject: (formData: FormData) => StandardObjectType;
@@ -113,7 +115,7 @@ declare class Requester {
     static off(interceptorId: number): typeof Requester;
     fetch({ url, method, body, query, signal, auth, headers }: Request): Promise<RequesterResponse>;
     post({ url, body, bodyType }: PostRequestConfig): Promise<RequesterResponse>;
-    get({ url, query }: GetRequestConfig): Promise<RequesterResponse>;
+    get({ url, query, signal }: GetRequestConfig): Promise<RequesterResponse>;
     static post({ url, body, bodyType, namespace, config }: PostRequestConfig & InstanceConfig): Promise<RequesterResponse>;
     static get({ url, query, namespace, config }: GetRequestConfig & InstanceConfig): Promise<RequesterResponse>;
 }

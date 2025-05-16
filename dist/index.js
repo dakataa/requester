@@ -373,6 +373,7 @@ var InterceptEvent = /* @__PURE__ */ function(InterceptEvent2) {
     InterceptEvent2[InterceptEvent2["POST_REQUEST"] = 1] = "POST_REQUEST";
     InterceptEvent2[InterceptEvent2["PRE_RESPONSE"] = 2] = "PRE_RESPONSE";
     InterceptEvent2[InterceptEvent2["POST_RESPONSE"] = 3] = "POST_RESPONSE";
+    InterceptEvent2[InterceptEvent2["ERROR"] = 4] = "ERROR";
     return InterceptEvent2;
 }(InterceptEvent || {});
 var InterceptEvent_default = InterceptEvent;
@@ -543,6 +544,15 @@ var _Requester = /*#__PURE__*/ function() {
                             });
                         });
                     });
+                }).catch(function(reason) {
+                    Object.values(_Requester.interceptors).filter(function(param) {
+                        var _param = _sliced_to_array(param, 3), event = _param[0], namespace = _param[2];
+                        return (namespace === void 0 || namespace === _this.namespace) && event === InterceptEvent_default.ERROR;
+                    }).forEach(function(param) {
+                        var _param = _sliced_to_array(param, 2), callback = _param[1];
+                        callback(requestId, reason, url, options);
+                    });
+                    return Promise.reject(reason);
                 });
             }
         },
@@ -597,14 +607,15 @@ var _Requester = /*#__PURE__*/ function() {
         {
             key: "get",
             value: function get(param) {
-                var url = param.url, query = param.query;
+                var url = param.url, query = param.query, signal = param.signal;
                 if (query && !_instanceof(query, URLSearchParams)) {
                     query = convertObjectToURLSearchParams(query);
                 }
                 return this.fetch({
                     url: url,
                     method: Method_default.GET,
-                    query: query
+                    query: query,
+                    signal: signal
                 });
             }
         }
