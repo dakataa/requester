@@ -4,7 +4,8 @@ import RequestBodyType from "@src/enum/RequestBodyType";
 type PostRequestConfig = {
     url: string;
     body?: FormData | string | StandardObjectType;
-    bodyType?: RequestBodyType
+    bodyType?: RequestBodyType,
+    signal?: AbortSignal
 }
 
 export default PostRequestConfig;

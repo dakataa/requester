@@ -154,7 +154,7 @@ class Requester {
         });
     }
 
-    post({url, body, bodyType}: PostRequestConfig) {
+    post({url, body, bodyType, signal}: PostRequestConfig) {
         let bodyObject = null;
         bodyType ||= RequestBodyType.JSON;
 
@@ -197,7 +197,8 @@ class Requester {
             url,
             method: Method.POST,
             body,
-            headers: RequestBodyTypeHeaders[bodyType]
+            headers: RequestBodyTypeHeaders[bodyType],
+            signal
         });
     }
 
@@ -219,9 +220,10 @@ class Requester {
                     body,
                     bodyType,
                     namespace,
-                    config
+                    config,
+                    signal
                 }: PostRequestConfig & InstanceConfig): Promise<RequesterResponse> {
-        return this.instance({namespace, config}).post({url, body, bodyType});
+        return this.instance({namespace, config}).post({url, body, bodyType, signal});
     }
 
     static get({url, query, namespace, config}: GetRequestConfig & InstanceConfig): Promise<RequesterResponse> {
