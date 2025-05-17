@@ -119,7 +119,7 @@ Requester.post({
 - **static instance(config?: [InstanceConfig](#instanceconfig)): Requester**
   Creates a new `Requester` instance with the provided configuration.
 
-- **static on(event: [InterceptEvent](#interceptevent), callback: Function): number**
+- **static on(event: [InterceptEvent](#interceptevent), callable: [PreRequestCallback](#PreRequestCallback) | [PreResponseCallback](#PreResponseCallback) | [PostResponseCallback](#PostResponseCallback) | [ErrorCallback](#ErrorCallback), namespace?: string): number**
   Adds an interceptor for the specified event.
 
 - **static off(interceptorId: number): void**
@@ -153,11 +153,12 @@ For convenience, aliases have been provided for all common request methods.
 
 ### PostRequestConfig
 
-| Key        | Type                                                                                                 | Required | Description          |
-|------------|------------------------------------------------------------------------------------------------------|----------|----------------------|
-| url        | string                                                                                               | Yes      | Full URL or Pathname |
-| body       | [FormData](https://developer.mozilla.org/en-US/docs/Web/API/FormData), string, Object ([key: value]) | No       | Request Body         |
-| bodyType   | [RequestBodyType](#RequestBodyType)                                                                  | No (Default: RequestBodyType.JSON)      | Type of Request Body |
+| Key      | Type                                                                                                 | Required                           | Description          |
+|----------|------------------------------------------------------------------------------------------------------|------------------------------------|----------------------|
+| url      | string                                                                                               | Yes                                | Full URL or Pathname |
+| body     | [FormData](https://developer.mozilla.org/en-US/docs/Web/API/FormData), string, Object ([key: value]) | No                                 | Request Body         |
+| bodyType | [RequestBodyType](#RequestBodyType)                                                                  | No (Default: RequestBodyType.JSON) | Type of Request Body |
+| signal   | AbortSignal                                                                                          | no                                 |                      |
 
 ### GetRequestConfig
 
@@ -165,6 +166,7 @@ For convenience, aliases have been provided for all common request methods.
 |----------|------------------------------------------------------------------------------------------------------------|----------|----------------------|
 | url      | string                                                                                                     | Yes      | Full URL or Pathname |
 | query    | [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams), Object ([key: value]) | No       | URL Query Parameters |
+| signal   | AbortSignal                                                                                                | no       |                      |
 
 ### Request
 
@@ -187,14 +189,57 @@ For convenience, aliases have been provided for all common request methods.
 | data   | any    | Response Data (JSON, Text) depends on response headers |
 
 
+### PreRequestCallback
+This type represents a function that is used for callback functions that are invoked before HTTP request to be executed.
+
+- **Parameters:**
+	- `requestId`: a `number` representing the unique identifier for the request.
+	- `url`: either a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object or a `string`, indicating the URL associated with the request.
+- **Return Type:** `void` — the function does not return any value.
+
+### PreResponseCallback
+This type represents a function that is used for callback functions that are invoked before processing HTTP response, providing raw Fetch API response details.
+
+- **Parameters:**
+	- `requestId`: a `number` representing the unique identifier for the request.
+	- `response`: a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object from the Fetch API, representing the HTTP response.
+	- `url`: either a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object or a `string`, indicating the URL associated with the request.
+	- `options`: of type `any`, allowing any additional options or data to be passed.
+
+- **Return Type:** `void` — the function does not return any value.
+
+### PostResponseCallback
+This type represents a function that is used for callback functions that are invoked on response.
+
+- **Parameters:**
+	- `requestId`: a `number` representing the unique identifier for the request.
+	- `response`: a  [Response](#Response) object, representing the HTTP response.
+	- `url`: either a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object or a `string`, indicating the URL associated with the request.
+	- `options`: of type `any`, allowing any additional options or data to be passed.
+
+- **Return Type:** `void` — the function does not return any value.
+
+### ErrorCallback
+This type represents a function that is used for callback functions that are invoked on error.
+
+- **Parameters:**
+	- `requestId`: a `number` representing the unique identifier for the request.
+	- `reason`: a `string` or `Error` object, representing the error.
+	- `url`: either a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object or a `string`, indicating the URL associated with the request.
+	- `options`: of type `any`, allowing any additional options or data to be passed.
+
+- **Return Type:** `void` — the function does not return any value.
+
+
 ## Enums
 
 ### InterceptEvent
-| Case            | Description               |
-|-----------------|---------------------------|
-| PRE_REQUEST     | FormData                  |
-| PRE_RESPONSE    | Before Response resolving |
-| POST_RESPONSE   | After Response resolving  |
+| Case          | Description               |
+|---------------|---------------------------|
+| PRE_REQUEST   | FormData                  |
+| PRE_RESPONSE  | Before Response resolving |
+| POST_RESPONSE | After Response resolving  |
+| ERROR         | On Error                  |
 
 
 ### RequestBodyType
@@ -275,6 +320,23 @@ Requester.post({
 }).then(({data, status}) => {
     console.log(status, data);
 });
+```
+
+### Cancel Request
+```typescript
+const abortController = new AbortController();
+Requester.get({
+    url: '/search?id=2',
+    query: {
+        search: 'term'
+    },
+	signal: abortController.signal
+}).then(({data, status}) => {
+    console.log(status, data);
+})
+
+// Cancel
+abortController.abort();
 ```
 
 ### Using Authorization

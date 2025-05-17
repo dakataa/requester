@@ -9,17 +9,17 @@ import InstanceConfig from "@src/type/InstanceConfig";
 import PostRequestConfig from "@src/type/PostRequestConfig";
 import GetRequestConfig from "@src/type/GetRequestConfig";
 import {
+    PostResponseCallback,
+    PreRequestCallback,
+    PreResponseCallback,
+    ErrorCallback
+} from "@src/type/InterceptEventCallbacks";
+import {
     convertFormDataToObject,
     convertObjectToFormData,
     convertObjectToURLSearchParams,
     convertURLSearchParamsToObject
 } from "@src/helper/DataHelper";
-
-
-type PreRequestCallback = (requestId: number, url: URL | string, options: any) => void;
-type PreResponseCallback = (requestId: number, response: globalThis.Response, url: URL | string, options: any) => void;
-type PostResponseCallback = (requestId: number, response: Response, url: URL | string, options: any) => void;
-type ErrorCallback = (requestId: number, reason: any, url: URL | string, options: any) => void;
 
 
 class Requester {
@@ -53,7 +53,7 @@ class Requester {
         this.namespace = namespace;
     }
 
-    static on(event: InterceptEvent, callable: PreRequestCallback | PostResponseCallback, namespace?: string): number {
+    static on(event: InterceptEvent, callable: PreRequestCallback | PreResponseCallback | PostResponseCallback | ErrorCallback, namespace?: string): number {
         const id = Math.floor(Math.random() * Date.now())
         this.interceptors[id] = [event, callable, namespace];
         return id;
