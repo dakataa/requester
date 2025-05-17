@@ -1,3 +1,12 @@
+# 2.0.1
+## Changes
+- Add new Intercept Event `Error` triggered on canceling request or exception.
+- Add new types for Intercept Event Callbacks `PostResponseCallback`, `PreRequestCallback`, `PreResponseCallback`, `ErrorCallback`
+- Separate Intercept Events by namespaces. Now you can handle specific event for a namespace. 
+```typescript
+Requester.on(InterceptEvent.PRE_REQUEST, (requestId, url) => { }, 'namespace')
+```
+
 # 2.0.0
 ## Breaking Changes
 ### Core

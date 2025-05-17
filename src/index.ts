@@ -18,6 +18,12 @@ import APIKey from "@src/component/authorization/APIKey";
 import AuthorizationInterface from "@src/component/authorization/AuthorizationInterface";
 import HttpException from "@src/type/HttpException";
 import Response from "@src/Response";
+import {
+    PostResponseCallback,
+    PreRequestCallback,
+    PreResponseCallback,
+    ErrorCallback
+} from "@src/type/InterceptEventCallbacks";
 
 export {
     Requester as default,
@@ -41,5 +47,9 @@ export type {
     GetRequestConfig,
     AuthorizationInterface,
     PostRequestConfig,
-    HttpException
+    HttpException,
+    PostResponseCallback,
+    PreRequestCallback,
+    PreResponseCallback,
+    ErrorCallback
 }

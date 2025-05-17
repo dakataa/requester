@@ -9,6 +9,12 @@ import InstanceConfig from "@src/type/InstanceConfig";
 import PostRequestConfig from "@src/type/PostRequestConfig";
 import GetRequestConfig from "@src/type/GetRequestConfig";
 import {
+    PostResponseCallback,
+    PreRequestCallback,
+    PreResponseCallback,
+    ErrorCallback
+} from "@src/type/InterceptEventCallbacks";
+import {
     convertFormDataToObject,
     convertObjectToFormData,
     convertObjectToURLSearchParams,
@@ -19,8 +25,13 @@ import {
 class Requester {
 
     private config: Config;
+    private namespace?: string;
 
-    private static interceptors: Array<[InterceptEvent, Function]> = [];
+    private static interceptors: {[key: number]: [
+        InterceptEvent,
+        (PreRequestCallback | PostResponseCallback | PreResponseCallback | ErrorCallback),
+        (string | undefined)
+    ]} = {};
 
     static defaults: Config = {
         timeout: 3000
@@ -38,17 +49,22 @@ class Requester {
             ...(config ?? {}),
             ...(namespace && Requester.namespace[namespace] ? Requester.namespace[namespace] : {})
         };
+
+        this.namespace = namespace;
     }
 
-    static on(event: InterceptEvent, callable: Function): number {
-        return this.interceptors.push([event, callable]);
+    static on(event: InterceptEvent, callable: PreRequestCallback | PreResponseCallback | PostResponseCallback | ErrorCallback, namespace?: string): number {
+        const id = Math.floor(Math.random() * Date.now())
+        this.interceptors[id] = [event, callable, namespace];
+        return id;
     };
 
-    static off(interceptorId: number): void {
-        if (this.interceptors[interceptorId] === undefined)
-            return;
+    static off(interceptorId: number) {
+        if (this.interceptors[interceptorId] !== undefined) {
+            delete this.interceptors[interceptorId];
+        }
 
-        this.interceptors.splice(interceptorId, 1);
+        return this;
     }
 
     fetch({
@@ -63,6 +79,8 @@ class Requester {
 
         url = new URL(url, this.config?.baseURL || undefined);
         auth ??= this.config?.authorization;
+
+        const requestId = Math.floor(Math.random() * Date.now());
 
         const search = new URLSearchParams({
                 ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
@@ -95,33 +113,48 @@ class Requester {
 
         const timeoutInterval = setTimeout(() => abortController?.abort(), this.config.timeout || 30000);
 
-        Requester.interceptors.filter(([i]) => i === InterceptEvent.PRE_REQUEST).forEach(([i, callback]) => {
-            options = callback(options);
+        Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+            return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_REQUEST;
+        }).forEach(([, callback]) => {
+            (callback as PreRequestCallback)(requestId, url, options);
         });
+
 
         return new Promise<Response>((resolve, reject) => {
             fetch(url, options)
                 .then(response => {
-                    Requester.interceptors.filter(([i]) => i === InterceptEvent.PRE_RESPONSE).forEach(([i, callback]) => {
-                        response = callback(response);
+                    Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                        return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_RESPONSE;
+                    }).forEach(([, callback]) => {
+                        (callback as PreResponseCallback)(requestId, response, url, options);
                     });
 
                     resolve(new Response(response));
-
-                    Requester.interceptors.filter(([i]) => i === InterceptEvent.POST_RESPONSE).forEach(([i, callback]) => {
-                        response = callback(response);
-                    });
                 })
                 .catch((error) => reject(error))
                 .finally(() => clearTimeout(timeoutInterval));
         }).then((response) => {
-            return new Promise<Response>((resolve) => response.getResponseData().then((data) => {
+            return new Promise<Response>((resolve) => response.getResponseData().then(() => {
                 resolve(response)
+
+                Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                    return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.POST_RESPONSE;
+                }).forEach(([, callback]) => {
+                    (callback as PostResponseCallback)(requestId, response, url, options);
+                });
             }))
+        }).catch((reason) => {
+            Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.ERROR;
+            }).forEach(([, callback]) => {
+                (callback as ErrorCallback)(requestId, reason, url, options);
+            });
+
+            return Promise.reject(reason);
         });
     }
 
-    post({url, body, bodyType}: PostRequestConfig) {
+    post({url, body, bodyType, signal}: PostRequestConfig) {
         let bodyObject = null;
         bodyType ||= RequestBodyType.JSON;
 
@@ -164,11 +197,12 @@ class Requester {
             url,
             method: Method.POST,
             body,
-            headers: RequestBodyTypeHeaders[bodyType]
+            headers: RequestBodyTypeHeaders[bodyType],
+            signal
         });
     }
 
-    get({url, query}: GetRequestConfig) {
+    get({url, query, signal}: GetRequestConfig) {
         if (query && !(query instanceof URLSearchParams)) {
             query = convertObjectToURLSearchParams(query);
         }
@@ -176,12 +210,20 @@ class Requester {
         return this.fetch({
             url,
             method: Method.GET,
-            query
+            query,
+            signal
         });
     }
 
-    static post({url, body, bodyType, namespace, config}: PostRequestConfig & InstanceConfig): Promise<RequesterResponse> {
-        return this.instance({namespace, config}).post({url, body, bodyType});
+    static post({
+                    url,
+                    body,
+                    bodyType,
+                    namespace,
+                    config,
+                    signal
+                }: PostRequestConfig & InstanceConfig): Promise<RequesterResponse> {
+        return this.instance({namespace, config}).post({url, body, bodyType, signal});
     }
 
     static get({url, query, namespace, config}: GetRequestConfig & InstanceConfig): Promise<RequesterResponse> {
