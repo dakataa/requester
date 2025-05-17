@@ -4,7 +4,7 @@
 - Add new types for Intercept Event Callbacks `PostResponseCallback`, `PreRequestCallback`, `PreResponseCallback`, `ErrorCallback`
 - Separate Intercept Events by namespaces. Now you can handle specific event for a namespace. 
 ```typescript
-Requester.on(InterceptEvent.PRE_REQUEST, (...) => { }, 'namespace')
+Requester.on(InterceptEvent.PRE_REQUEST, (requestId, url) => { }, 'namespace')
 ```
 
 # 2.0.0
