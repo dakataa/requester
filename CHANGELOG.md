@@ -1,3 +1,8 @@
+# 2.0.2
+## Changes
+- Fix FormData key parsing to support hyphenated keys in `DataHelper.convertFormDataToObject`
+
+
 # 2.0.1
 ## Changes
 - Add new Intercept Event `Error` triggered on canceling request or exception.

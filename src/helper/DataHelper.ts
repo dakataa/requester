@@ -3,10 +3,11 @@ import StandardObjectType from "@src/type/StandardObjectType";
 const convertFormDataToObject = (formData: FormData): StandardObjectType => {
     const data: StandardObjectType = {};
     formData.forEach(function (value, originalKey) {
-        const keys = originalKey.match(/\w+/gi) ?? [];
+        const keys = originalKey.match(/[\w-]+/gi) ?? [];
         if (!keys.length) {
             throw new Error('Invalid Form Data Key: ' + originalKey);
         }
+
         const lastKey = keys.pop();
         const isArray = originalKey.endsWith('[]');
 
