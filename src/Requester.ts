@@ -76,21 +76,18 @@ class Requester {
               auth,
               headers
           }: Request): Promise<Response> {
-
         url = new URL(url, this.config?.baseURL || undefined);
         auth ??= this.config?.authorization;
 
         const requestId = Math.floor(Math.random() * Date.now());
-
         const search = new URLSearchParams({
-                ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
-                ...(Object.fromEntries((url as URL).searchParams)),
-                ...(new URLSearchParams(auth?.getQuery() || {}))
+            ...Object.fromEntries((url as URL).searchParams.entries()),
+            ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
+            ...Object.fromEntries(convertObjectToURLSearchParams(auth?.getQuery() || {}))
             }
         );
 
         url.search = search.toString();
-
         const abortController = new AbortController();
         let options: any = {
             signal: signal || abortController.signal,

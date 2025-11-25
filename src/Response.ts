@@ -14,7 +14,7 @@ class RequesterResponse {
                 return resolve(this.data);
             }
 
-            (this.response.headers.get('content-type')?.includes('application/json') ? this.response.json() : this.response.text()).then((data) => {
+            (this.response.headers.get('content-type')?.includes('application/json') ? this.response.json() : this.response.headers.has('content-disposition') ?  this.response.blob() : this.response.text()).then((data) => {
                 this.data = data;
                 resolve(this.data);
             })

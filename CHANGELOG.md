@@ -1,3 +1,7 @@
+# 2.0.3
+## Changes
+- Fix response to handle blobs
+
 # 2.0.2
 ## Changes
 - Fix FormData key parsing to support hyphenated keys in `DataHelper.convertFormDataToObject`
