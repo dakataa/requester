@@ -1,6 +1,6 @@
 # 2.0.3
 ## Changes
-
+- Fix response to handle blobs
 
 # 2.0.2
 ## Changes
