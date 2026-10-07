@@ -5,7 +5,8 @@ type PostRequestConfig = {
     url: string;
     body?: FormData | string | StandardObjectType;
     bodyType?: RequestBodyType,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    timeout?: number
 }
 
 export default PostRequestConfig;

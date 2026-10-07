@@ -32,6 +32,7 @@ class Requester {
         (PreRequestCallback | PostResponseCallback | PreResponseCallback | ErrorCallback),
         (string | undefined)
     ]} = {};
+    private static nextId = 0;
 
     static defaults: Config = {
         timeout: 3000
@@ -54,7 +55,7 @@ class Requester {
     }
 
     static on(event: InterceptEvent, callable: PreRequestCallback | PreResponseCallback | PostResponseCallback | ErrorCallback, namespace?: string): number {
-        const id = Math.floor(Math.random() * Date.now())
+        const id = ++this.nextId;
         this.interceptors[id] = [event, callable, namespace];
         return id;
     };
@@ -67,139 +68,179 @@ class Requester {
         return this;
     }
 
-    fetch({
+    async fetch({
               url,
               method = Method.GET,
               body,
+              bodyType,
               query,
               signal,
               auth,
-              headers
+              headers,
+              timeout
           }: Request): Promise<Response> {
         url = new URL(url, this.config?.baseURL || undefined);
         auth ??= this.config?.authorization;
 
-        const requestId = Math.floor(Math.random() * Date.now());
-        const search = new URLSearchParams({
-            ...Object.fromEntries((url as URL).searchParams.entries()),
-            ...(query ? Object.fromEntries(query instanceof URLSearchParams ? query : (query instanceof FormData ? convertObjectToURLSearchParams(convertFormDataToObject(query)) : new URLSearchParams(query))) : {}),
-            ...Object.fromEntries(convertObjectToURLSearchParams(auth?.getQuery() || {}))
-            }
-        );
+        const requestId = ++Requester.nextId;
+        const search = new URLSearchParams((url as URL).searchParams);
+        const appendToSearch = (parameters: URLSearchParams) => {
+            parameters.forEach((value, key) => {
+                search.append(key, String(value));
+            });
+        };
+
+        appendToSearch(convertObjectToURLSearchParams(auth?.getQuery() || {}));
+
+        if (query instanceof URLSearchParams || query instanceof FormData) {
+            query.forEach((value, key) => {
+                search.append(key, String(value));
+            });
+        } else if (query) {
+            appendToSearch(convertObjectToURLSearchParams(query));
+        }
 
         url.search = search.toString();
         const abortController = new AbortController();
-        let options: any = {
-            signal: signal || abortController.signal,
-            method: method || Method.GET,
-            headers: {
-                ...(headers || {}),
-                ...(auth?.getHeaders() || {}),
-                ...(this.config?.headers || {})
-            }
-        };
-
-        switch (method) {
-            case Method.POST: {
-                options = {
-                    ...options,
-                    body: body
-                }
-            }
+        const abortFromCaller = () => abortController.abort(signal?.reason);
+        if (signal?.aborted) {
+            abortFromCaller();
+        } else {
+            signal?.addEventListener('abort', abortFromCaller, {once: true});
         }
 
-        const timeoutInterval = setTimeout(() => abortController?.abort(), this.config.timeout || 30000);
+        const timeoutInterval = setTimeout(() => abortController.abort(), timeout ?? this.config?.timeout ?? 30000);
+        const options: any = {
+            signal: abortController.signal,
+            method,
+            headers: {}
+        };
 
-        Object.values(Requester.interceptors).filter(([event, , namespace]) => {
-            return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_REQUEST;
-        }).forEach(([, callback]) => {
-            (callback as PreRequestCallback)(requestId, url, options);
-        });
+        const callerHasHeader = (headerName: string): boolean => {
+            return Object.keys(headers || {}).some((name) => name.toLowerCase() === headerName);
+        };
+        const hasCallerContentType = callerHasHeader('content-type');
 
+        try {
+            if (body !== undefined && method !== Method.GET) {
+                bodyType ??= body instanceof FormData ? RequestBodyType.FormData
+                    : body !== null && typeof body === 'object' && !(body instanceof Blob)
+                        && !(body instanceof URLSearchParams) && !(body instanceof ArrayBuffer) && !ArrayBuffer.isView(body)
+                        ? RequestBodyType.JSON : undefined;
 
-        return new Promise<Response>((resolve, reject) => {
-            fetch(url, options)
-                .then(response => {
-                    Object.values(Requester.interceptors).filter(([event, , namespace]) => {
-                        return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_RESPONSE;
-                    }).forEach(([, callback]) => {
-                        (callback as PreResponseCallback)(requestId, response, url, options);
-                    });
+                if (typeof body === 'string' && (bodyType === RequestBodyType.FormData || bodyType === RequestBodyType.Urlencoded)) {
+                    try {
+                        const parsed = JSON.parse(body);
+                        if (parsed !== null && typeof parsed === 'object') {
+                            body = parsed;
+                        }
+                    } catch {
+                        // Already encoded string bodies can be sent as-is.
+                    }
+                }
 
-                    resolve(new Response(response));
-                })
-                .catch((error) => reject(error))
-                .finally(() => clearTimeout(timeoutInterval));
-        }).then((response) => {
-            return new Promise<Response>((resolve) => response.getResponseData().then(() => {
-                resolve(response)
+                switch (bodyType) {
+                    case RequestBodyType.JSON:
+                        body = typeof body === 'string' ? body : JSON.stringify(body instanceof FormData ? convertFormDataToObject(body) : body);
+                        break;
+                    case RequestBodyType.FormData:
+                        if (typeof body === 'string') {
+                            try {
+                                body = JSON.parse(body);
+                            } catch {
+                                throw new TypeError('When using FormData bodyType, body must be a FormData instance or JSON-convertible object');
+                            }
+                        }
 
-                Object.values(Requester.interceptors).filter(([event, , namespace]) => {
-                    return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.POST_RESPONSE;
-                }).forEach(([, callback]) => {
-                    (callback as PostResponseCallback)(requestId, response, url, options);
+                        if (!(body instanceof FormData) && body !== null && typeof body === 'object') {
+                            body = convertObjectToFormData(body);
+                        } else if (body !== undefined && !(body instanceof FormData)) {
+                            throw new TypeError('When using FormData bodyType, body must be a FormData instance or object');
+                        }
+                        break;
+                    case RequestBodyType.Urlencoded:
+                        if (body instanceof FormData) {
+                            const parameters = new URLSearchParams();
+                            body.forEach((value, key) => parameters.append(key, String(value)));
+                            body = parameters.toString();
+                        } else if (body instanceof URLSearchParams) {
+                            body = body.toString();
+                        } else if (body !== null && typeof body === 'object') {
+                            body = convertObjectToURLSearchParams(body).toString();
+                        }
+                        break;
+                }
+            }
+
+            const requestHeaders: {[key: string]: string} = {};
+            const setHeaders = (source: {[key: string]: string | number}) => {
+                Object.entries(source).forEach(([key, value]) => {
+                    requestHeaders[key] = String(value);
                 });
-            }))
-        }).catch((reason) => {
+            };
+
+            setHeaders(headers || {});
+            setHeaders(this.config?.headers || {});
+            setHeaders(auth?.getHeaders() || {});
+            setHeaders(bodyType ? RequestBodyTypeHeaders[bodyType] || {} : {});
+            if (body instanceof FormData && !hasCallerContentType) {
+                // Fetch must generate the multipart boundary for this exact body.
+                Object.keys(requestHeaders).forEach((key) => {
+                    if (key.toLowerCase() === 'content-type') {
+                        delete requestHeaders[key];
+                    }
+                });
+            }
+
+            options.headers = requestHeaders;
+            if (method !== Method.GET && body !== undefined) {
+                options.body = body;
+            }
+
+            Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_REQUEST;
+            }).forEach(([, callback]) => {
+                (callback as PreRequestCallback)(requestId, url, options);
+            });
+
+            const nativeResponse = await fetch(url, options);
+            Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_RESPONSE;
+            }).forEach(([, callback]) => {
+                (callback as PreResponseCallback)(requestId, nativeResponse, url, options);
+            });
+
+            const response = new Response(nativeResponse);
+            await response.getResponseData();
+
+            Object.values(Requester.interceptors).filter(([event, , namespace]) => {
+                return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.POST_RESPONSE;
+            }).forEach(([, callback]) => {
+                (callback as PostResponseCallback)(requestId, response, url, options);
+            });
+
+            return response;
+        } catch (reason) {
             Object.values(Requester.interceptors).filter(([event, , namespace]) => {
                 return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.ERROR;
             }).forEach(([, callback]) => {
                 (callback as ErrorCallback)(requestId, reason, url, options);
             });
 
-            return Promise.reject(reason);
-        });
+            throw reason;
+        } finally {
+            clearTimeout(timeoutInterval);
+            signal?.removeEventListener('abort', abortFromCaller);
+        }
     }
 
-    post({url, body, bodyType, signal}: PostRequestConfig) {
-        let bodyObject = null;
-        bodyType ||= RequestBodyType.JSON;
+    post({url, body, bodyType, signal, timeout}: PostRequestConfig) {
+        const resolvedBodyType = bodyType === undefined && !(body instanceof FormData) ? RequestBodyType.JSON : bodyType;
 
-        switch (typeof body) {
-            case 'string': {
-                try {
-                    bodyObject = JSON.parse(body);
-                } catch (e) {
-
-                }
-                break;
-            }
-            case 'object': {
-                bodyObject = (body instanceof FormData) ? convertFormDataToObject(body) : body;
-                break;
-            }
-        }
-
-        const formData = bodyObject ? convertObjectToFormData(bodyObject) : null;
-
-        switch (bodyType) {
-            case RequestBodyType.Urlencoded: {
-                body = bodyObject ? (convertObjectToURLSearchParams(bodyObject)).toString() : body;
-                break;
-            }
-            case RequestBodyType.FormData: {
-                body = formData || body;
-                break;
-            }
-            case RequestBodyType.JSON: {
-                body = bodyObject ? JSON.stringify(bodyObject) : body;
-                break;
-            }
-            default: {
-
-            }
-        }
-
-        return this.fetch({
-            url,
-            method: Method.POST,
-            body,
-            headers: RequestBodyTypeHeaders[bodyType],
-            signal
-        });
+        return this.fetch({url, method: Method.POST, body, bodyType: resolvedBodyType, signal, timeout});
     }
 
-    get({url, query, signal}: GetRequestConfig) {
+    get({url, query, signal, timeout}: GetRequestConfig) {
         if (query && !(query instanceof URLSearchParams)) {
             query = convertObjectToURLSearchParams(query);
         }
@@ -208,7 +249,8 @@ class Requester {
             url,
             method: Method.GET,
             query,
-            signal
+            signal,
+            timeout
         });
     }
 
@@ -218,13 +260,14 @@ class Requester {
                     bodyType,
                     namespace,
                     config,
-                    signal
+                    signal,
+                    timeout
                 }: PostRequestConfig & InstanceConfig): Promise<RequesterResponse> {
-        return this.instance({namespace, config}).post({url, body, bodyType, signal});
+        return this.instance({namespace, config}).post({url, body, bodyType, signal, timeout});
     }
 
-    static get({url, query, namespace, config}: GetRequestConfig & InstanceConfig): Promise<RequesterResponse> {
-        return this.instance({namespace, config}).get({url, query});
+    static get({url, query, namespace, config, signal, timeout}: GetRequestConfig & InstanceConfig): Promise<RequesterResponse> {
+        return this.instance({namespace, config}).get({url, query, signal, timeout});
     }
 }
 
