@@ -15,8 +15,8 @@ class RequesterResponse {
         }
 
         if (this.response.body === null || this.response.status === 204 || this.response.status === 205 || this.response.status === 304) {
-            this.data = null;
-            return Promise.resolve(null);
+            this.data = '';
+            return Promise.resolve('');
         }
 
         if (!this.dataPromise) {

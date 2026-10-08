@@ -18,8 +18,57 @@ import {
     convertFormDataToObject,
     convertObjectToFormData,
     convertObjectToURLSearchParams,
-    convertURLSearchParamsToObject
+    convertURLSearchParamsToObject,
+    mergeURLSearchParams
 } from "@src/helper/DataHelper";
+
+const isReadableStream = (body: unknown): body is ReadableStream =>
+    typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
+
+const isBlob = (body: unknown): body is Blob =>
+    typeof Blob !== 'undefined' && body instanceof Blob;
+
+const isFormData = (body: unknown): body is FormData =>
+    typeof FormData !== 'undefined' && body instanceof FormData;
+
+const isRawBody = (body: unknown): boolean =>
+    isBlob(body) || body instanceof URLSearchParams || body instanceof ArrayBuffer
+    || ArrayBuffer.isView(body) || isReadableStream(body);
+
+const formDataHasFiles = (body: FormData): boolean => {
+    let hasFiles = false;
+    body.forEach(value => {
+        if (typeof value !== 'string') {
+            hasFiles = true;
+        }
+    });
+    return hasFiles;
+};
+
+const formDataHasUnsupportedJSONKeys = (body: FormData): boolean => {
+    let unsupported = false;
+    // A path that holds nested fields cannot also hold a value, e.g. `user` and `user[name]`.
+    const pathKinds = new Map<string, 'object' | 'value'>();
+    body.forEach((_, key) => {
+        if (!/^[\w-]+(?:\[[\w-]+\])*(?:\[\])?$/.test(key)) {
+            unsupported = true;
+            return;
+        }
+
+        const parts = key.match(/[\w-]+/g) ?? [];
+        parts.forEach((_, index) => {
+            // Valid keys never contain '.', so it is safe as a path separator.
+            const path = parts.slice(0, index + 1).join('.');
+            const kind = index < parts.length - 1 ? 'object' : 'value';
+            const previous = pathKinds.get(path);
+            if (previous && previous !== kind) {
+                unsupported = true;
+            }
+            pathKinds.set(path, kind);
+        });
+    });
+    return unsupported;
+};
 
 
 class Requester {
@@ -84,49 +133,42 @@ class Requester {
 
         const requestId = ++Requester.nextId;
         const search = new URLSearchParams((url as URL).searchParams);
-        const appendToSearch = (parameters: URLSearchParams) => {
-            parameters.forEach((value, key) => {
-                search.append(key, String(value));
-            });
-        };
 
-        appendToSearch(convertObjectToURLSearchParams(auth?.getQuery() || {}));
-
-        if (query instanceof URLSearchParams || query instanceof FormData) {
+        if (query instanceof URLSearchParams || isFormData(query)) {
+            const parameters = new URLSearchParams();
             query.forEach((value, key) => {
-                search.append(key, String(value));
+                parameters.append(key, String(value));
             });
+            mergeURLSearchParams(search, parameters);
         } else if (query) {
-            appendToSearch(convertObjectToURLSearchParams(query));
+            mergeURLSearchParams(search, convertObjectToURLSearchParams(query));
         }
+        mergeURLSearchParams(search, convertObjectToURLSearchParams(auth?.getQuery() || {}));
 
         url.search = search.toString();
         const abortController = new AbortController();
-        const abortFromCaller = () => abortController.abort(signal?.reason);
-        if (signal?.aborted) {
-            abortFromCaller();
-        } else {
-            signal?.addEventListener('abort', abortFromCaller, {once: true});
-        }
-
-        const timeoutInterval = setTimeout(() => abortController.abort(), timeout ?? this.config?.timeout ?? 30000);
+        const effectiveTimeout = timeout === 0 ? 30000 : (timeout ?? this.config?.timeout) || 30000;
+        let timeoutInterval: ReturnType<typeof setTimeout> | undefined;
         const options: any = {
-            signal: abortController.signal,
+            signal: signal || abortController.signal,
             method,
             headers: {}
         };
 
-        const callerHasHeader = (headerName: string): boolean => {
-            return Object.keys(headers || {}).some((name) => name.toLowerCase() === headerName);
-        };
-        const hasCallerContentType = callerHasHeader('content-type');
-
         try {
             if (body !== undefined && method !== Method.GET) {
-                bodyType ??= body instanceof FormData ? RequestBodyType.FormData
-                    : body !== null && typeof body === 'object' && !(body instanceof Blob)
+                bodyType ??= isFormData(body) ? RequestBodyType.FormData
+                    : body !== null && typeof body === 'object' && !isBlob(body)
                         && !(body instanceof URLSearchParams) && !(body instanceof ArrayBuffer) && !ArrayBuffer.isView(body)
+                        && !isReadableStream(body)
                         ? RequestBodyType.JSON : undefined;
+
+                if (isFormData(body) && formDataHasFiles(body) && bodyType !== RequestBodyType.FormData) {
+                    throw new TypeError('FormData containing files requires FormData bodyType');
+                }
+                if (isFormData(body) && formDataHasUnsupportedJSONKeys(body) && bodyType !== RequestBodyType.FormData) {
+                    throw new TypeError('FormData field names require FormData bodyType');
+                }
 
                 if (typeof body === 'string' && (bodyType === RequestBodyType.FormData || bodyType === RequestBodyType.Urlencoded)) {
                     try {
@@ -141,7 +183,7 @@ class Requester {
 
                 switch (bodyType) {
                     case RequestBodyType.JSON:
-                        body = typeof body === 'string' ? body : JSON.stringify(body instanceof FormData ? convertFormDataToObject(body) : body);
+                        body = body === null ? undefined : typeof body === 'string' ? body : JSON.stringify(isFormData(body) ? convertFormDataToObject(body) : body);
                         break;
                     case RequestBodyType.FormData:
                         if (typeof body === 'string') {
@@ -152,14 +194,14 @@ class Requester {
                             }
                         }
 
-                        if (!(body instanceof FormData) && body !== null && typeof body === 'object') {
+                        if (!isFormData(body) && body !== null && typeof body === 'object') {
                             body = convertObjectToFormData(body);
-                        } else if (body !== undefined && !(body instanceof FormData)) {
+                        } else if (body !== undefined && !isFormData(body)) {
                             throw new TypeError('When using FormData bodyType, body must be a FormData instance or object');
                         }
                         break;
                     case RequestBodyType.Urlencoded:
-                        if (body instanceof FormData) {
+                        if (isFormData(body)) {
                             const parameters = new URLSearchParams();
                             body.forEach((value, key) => parameters.append(key, String(value)));
                             body = parameters.toString();
@@ -173,28 +215,35 @@ class Requester {
             }
 
             const requestHeaders: {[key: string]: string} = {};
+            const deleteHeader = (name: string) => {
+                const existing = Object.keys(requestHeaders).find(key => key.toLowerCase() === name.toLowerCase());
+                if (existing) {
+                    delete requestHeaders[existing];
+                }
+            };
             const setHeaders = (source: {[key: string]: string | number}) => {
                 Object.entries(source).forEach(([key, value]) => {
+                    deleteHeader(key);
                     requestHeaders[key] = String(value);
                 });
             };
 
-            setHeaders(headers || {});
             setHeaders(this.config?.headers || {});
-            setHeaders(auth?.getHeaders() || {});
             setHeaders(bodyType ? RequestBodyTypeHeaders[bodyType] || {} : {});
-            if (body instanceof FormData && !hasCallerContentType) {
-                // Fetch must generate the multipart boundary for this exact body.
-                Object.keys(requestHeaders).forEach((key) => {
-                    if (key.toLowerCase() === 'content-type') {
-                        delete requestHeaders[key];
-                    }
-                });
+            if (isFormData(body) || (bodyType === undefined &&
+                (body instanceof URLSearchParams || (isBlob(body) && Boolean(body.type))))) {
+                // Fetch generates the multipart boundary or infers the native body's type.
+                deleteHeader('content-type');
             }
+            setHeaders(headers || {});
+            setHeaders(auth?.getHeaders() || {});
 
             options.headers = requestHeaders;
             if (method !== Method.GET && body !== undefined) {
                 options.body = body;
+                if (isReadableStream(body)) {
+                    options.duplex = 'half';
+                }
             }
 
             Object.values(Requester.interceptors).filter(([event, , namespace]) => {
@@ -203,7 +252,22 @@ class Requester {
                 (callback as PreRequestCallback)(requestId, url, options);
             });
 
-            const nativeResponse = await fetch(url, options);
+            if (!signal && Number.isFinite(effectiveTimeout)) {
+                timeoutInterval = setTimeout(() => {
+                    const reason = typeof DOMException !== 'undefined'
+                        ? new DOMException('Request timed out', 'TimeoutError')
+                        : Object.assign(new Error('Request timed out'), {name: 'TimeoutError'});
+                    abortController.abort(reason);
+                }, Math.min(effectiveTimeout, 2147483647));
+            }
+            let nativeResponse: globalThis.Response;
+            try {
+                nativeResponse = await fetch(url, options);
+            } finally {
+                if (timeoutInterval !== undefined) {
+                    clearTimeout(timeoutInterval);
+                }
+            }
             Object.values(Requester.interceptors).filter(([event, , namespace]) => {
                 return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.PRE_RESPONSE;
             }).forEach(([, callback]) => {
@@ -216,7 +280,11 @@ class Requester {
             Object.values(Requester.interceptors).filter(([event, , namespace]) => {
                 return (namespace === undefined || namespace === this.namespace) && event === InterceptEvent.POST_RESPONSE;
             }).forEach(([, callback]) => {
-                (callback as PostResponseCallback)(requestId, response, url, options);
+                try {
+                    (callback as PostResponseCallback)(requestId, response, url, options);
+                } catch (error) {
+                    console.error('POST_RESPONSE interceptor failed', error);
+                }
             });
 
             return response;
@@ -229,13 +297,17 @@ class Requester {
 
             throw reason;
         } finally {
-            clearTimeout(timeoutInterval);
-            signal?.removeEventListener('abort', abortFromCaller);
+            if (timeoutInterval !== undefined) {
+                clearTimeout(timeoutInterval);
+            }
         }
     }
 
     post({url, body, bodyType, signal, timeout}: PostRequestConfig) {
-        const resolvedBodyType = bodyType === undefined && !(body instanceof FormData) ? RequestBodyType.JSON : bodyType;
+        const resolvedBodyType = bodyType === undefined
+            ? isFormData(body) && (formDataHasFiles(body) || formDataHasUnsupportedJSONKeys(body)) ? RequestBodyType.FormData
+                : isRawBody(body) ? undefined : RequestBodyType.JSON
+            : bodyType;
 
         return this.fetch({url, method: Method.POST, body, bodyType: resolvedBodyType, signal, timeout});
     }
