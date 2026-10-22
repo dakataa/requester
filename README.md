@@ -142,6 +142,7 @@ For convenience, aliases have been provided for all common request methods.
 | baseURL       | string                                                                                         |         | No       | Base URL to create Endpoint |
 | authorization | Authorization Object ([BearerToken](#BearerToken), [BasicAuth](#BasicAuth), [APIKey](#APIKey)) |         | No       | Authorization Object.       |
 | headers       | array                                                                                          |         | No       | List of HTTP Headers.       |
+| timeout       | number                                                                                         | 3000 ms | No       | Time allowed for response headers. `0` falls back to 30000 ms; `Infinity` disables the timeout; larger finite values are capped at 2147483647 ms. |
 
 ### InstanceConfig
 
@@ -156,9 +157,10 @@ For convenience, aliases have been provided for all common request methods.
 | Key      | Type                                                                                                 | Required                           | Description          |
 |----------|------------------------------------------------------------------------------------------------------|------------------------------------|----------------------|
 | url      | string                                                                                               | Yes                                | Full URL or Pathname |
-| body     | [FormData](https://developer.mozilla.org/en-US/docs/Web/API/FormData), string, Object ([key: value]) | No                                 | Request Body         |
-| bodyType | [RequestBodyType](#RequestBodyType)                                                                  | No (Default: RequestBodyType.JSON) | Type of Request Body |
+| body     | FormData, Blob, URLSearchParams, ArrayBuffer, typed array, ReadableStream, string, Object, or null | No | Request Body |
+| bodyType | [RequestBodyType](#RequestBodyType) | No (Default: JSON for supported text-only FormData, strings, and objects; multipart for FormData containing files or field names that JSON conversion would change) | Type of Request Body |
 | signal   | AbortSignal                                                                                          | no                                 |                      |
+| timeout  | number                                                                                               | No                                 | Time allowed for response headers; ignored when `signal` is supplied. |
 
 ### GetRequestConfig
 
@@ -167,6 +169,7 @@ For convenience, aliases have been provided for all common request methods.
 | url      | string                                                                                                     | Yes      | Full URL or Pathname |
 | query    | [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams), Object ([key: value]) | No       | URL Query Parameters |
 | signal   | AbortSignal                                                                                                | no       |                      |
+| timeout  | number                                                                                                     | No       | Time allowed for response headers; ignored when `signal` is supplied. |
 
 ### Request
 
