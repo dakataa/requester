@@ -4,6 +4,44 @@ const {
     convertObjectToFormData, convertFormDataToObject, convertObjectToURLSearchParams, convertURLSearchParamsToObject
 } = require('./helpers.cjs');
 
+for (const [name, createInput, convert] of [
+    ['FormData', () => new FormData(), convertFormDataToObject],
+    ['URLSearchParams', () => new URLSearchParams(), convertURLSearchParamsToObject]
+]) {
+    test(`${name} preserves prototype-related keys as own data properties`, () => {
+        for (const fields of [
+            [['__proto__[role]', 'admin'], ['__proto__[name]', 'Alice']],
+            [['user[__proto__][role]', 'admin'], ['constructor[prototype][role]', 'editor']],
+            [['__proto__', 'literal']],
+            [['__proto__[]', 'first'], ['__proto__[]', 'second']],
+            [['toString[value]', 'text'], ['hasOwnProperty', 'value']]
+        ]) {
+            const input = createInput();
+            fields.forEach(([key, value]) => input.append(key, value));
+            const result = convert(input);
+
+            assert.equal(Object.getPrototypeOf(result), Object.prototype);
+            assert.equal(result.role, undefined);
+            assert.equal(({}).role, undefined);
+            for (const [key] of fields) {
+                const parts = key.match(/[\w-]+/g);
+                let nested = result;
+                for (const part of parts) {
+                    assert.ok(Object.hasOwn(nested, part), `missing own property: ${key}`);
+                    if (!Array.isArray(nested)) {
+                        assert.equal(Object.getPrototypeOf(nested), Object.prototype);
+                    }
+                    nested = nested[part];
+                }
+            }
+            assert.deepEqual(JSON.parse(JSON.stringify(result)), result);
+            if (fields[0][0] === '__proto__[]') {
+                assert.deepEqual(result.__proto__, ['first', 'second']);
+            }
+        }
+    });
+}
+
 test('convertObjectToFormData flattens nested objects and arrays into bracket keys', () => {
     const form = convertObjectToFormData({a: 1, b: {c: 'x', d: {e: true}}, list: ['p', 'q']});
 

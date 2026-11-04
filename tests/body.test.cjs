@@ -163,6 +163,17 @@ test('POST still converts compatible FormData field paths to JSON', async () => 
     });
 });
 
+test('POST preserves __proto__ fields when converting FormData to JSON', async () => {
+    const form = new FormData();
+    form.append('name', 'Alice');
+    form.append('__proto__[role]', 'admin');
+    const [call] = await recordRequests(() => new Requester().post({url, body: form}));
+
+    assert.deepEqual(JSON.parse(call.options.body), {
+        name: 'Alice', ['__proto__']: {role: 'admin'}
+    });
+});
+
 test('fetch infers JSON for plain objects and leaves strings untyped', async () => {
     const object = await send({a: 1});
     const string = await send('plain text');

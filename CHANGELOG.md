@@ -8,6 +8,7 @@
 - Added automated tests for configuration, authorization, request bodies, interceptors, responses, and data helpers.
 
 ## Fixes
+- FormData and URLSearchParams conversion preserves `__proto__` and other prototype-related keys as own data properties without changing the resulting object's prototype or losing fields during JSON serialization.
 - Query parameters replace matching values in the URL; authorization query parameters take precedence over caller values. Repeated values supplied in `URLSearchParams` are preserved.
 - A timeout applies only until response headers arrive and is skipped when the caller supplies an `AbortSignal`. Timeout aborts use a `TimeoutError` reason; `timeout: 0` falls back to 30 seconds, `Infinity` disables the timeout, and larger finite values are capped at the maximum supported timer delay.
 - Header names are merged without regard to case, and an explicit `Content-Type` is preserved.
@@ -15,7 +16,7 @@
 - `post()` converts supported text-only `FormData` to JSON by default and preserves repeated fields as arrays. FormData containing files, field names that JSON conversion would change, or conflicting field paths (such as `user` and `user[name]`) is sent as multipart, and a `null` body is sent empty.
 - Non-plain query values, such as `Date`, are included in the URL.
 - Exceptions from `POST_RESPONSE` observers are logged without rejecting successful requests or triggering `ERROR` observers.
-- Empty responses expose an empty string as `data`.
+- Responses with no body (including HEAD, 204, 205, and 304 responses) and empty text responses expose an empty string as `data`. JSON response bodies are parsed strictly: empty, whitespace-only, or malformed JSON rejects the request with a `SyntaxError` and triggers `ERROR` observers.
 - `BasicAuth` sends a valid `Basic` header: credentials are base64 encoded (previously decoded with `atob`, which could throw) and non-Latin-1 characters are encoded as UTF-8.
 - `convertURLSearchParamsToObject` keeps every value of a repeated `key[]` parameter instead of only the last one, including when object and array bracket keys are mixed.
 

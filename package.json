@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "prepack": "npm run build",
     "test": "npm run build && node --test tests/*.test.cjs"
   },
   "repository": {

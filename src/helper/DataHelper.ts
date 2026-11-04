@@ -1,5 +1,12 @@
 import StandardObjectType from "@src/type/StandardObjectType";
 
+// Define input keys as data properties, bypassing inherited setters such as __proto__.
+const setOwnProperty = (target: object, key: string, value: unknown): void => {
+    Object.defineProperty(target, key, {
+        value, enumerable: true, writable: true, configurable: true
+    });
+};
+
 const convertFormDataToObject = (formData: FormData): StandardObjectType => {
     const data: StandardObjectType = {};
     formData.forEach(function (value, originalKey) {
@@ -13,7 +20,8 @@ const convertFormDataToObject = (formData: FormData): StandardObjectType => {
 
         let nested: any = data;
         (keys || []).forEach(function (key) {
-            nested[key] = {...(nested[key] ?? {})};
+            const current = Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : undefined;
+            setOwnProperty(nested, key, {...(current ?? {})});
             nested = nested[key];
         });
 
@@ -21,9 +29,9 @@ const convertFormDataToObject = (formData: FormData): StandardObjectType => {
             const hasValue = Object.prototype.hasOwnProperty.call(nested, lastKey);
             if (isArray || hasValue) {
                 const previous = hasValue ? nested[lastKey] : [];
-                nested[lastKey] = [...(Array.isArray(previous) ? previous : [previous]), value];
+                setOwnProperty(nested, lastKey, [...(Array.isArray(previous) ? previous : [previous]), value]);
             } else {
-                nested[lastKey] = value;
+                setOwnProperty(nested, lastKey, value);
             }
         }
     });
@@ -88,18 +96,18 @@ const convertURLSearchParamsToObject = (searchData: URLSearchParams): object => 
                     } else if (current !== null && typeof current === 'object') {
                         let nextIndex = 0;
                         while (Object.prototype.hasOwnProperty.call(current, nextIndex)) nextIndex++;
-                        current[nextIndex] = value;
+                        setOwnProperty(current, String(nextIndex), value);
                     } else {
-                        nested[key] = current === undefined ? [value] : [current, value];
+                        setOwnProperty(nested, key, current === undefined ? [value] : [current, value]);
                     }
                 } else {
-                    nested[key] = value;
+                    setOwnProperty(nested, key, value);
                 }
             } else {
                 const current = Object.prototype.hasOwnProperty.call(nested, key) ? nested[key] : undefined;
-                nested[key] = Array.isArray(current) ? {...current}
+                setOwnProperty(nested, key, Array.isArray(current) ? {...current}
                     : current !== null && typeof current === 'object' ? current
-                        : current === undefined ? {} : {0: current};
+                        : current === undefined ? {} : {0: current});
                 nested = nested[key];
             }
         });

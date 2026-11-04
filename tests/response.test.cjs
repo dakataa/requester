@@ -18,6 +18,27 @@ test('JSON content types with parameters are parsed', async () => {
     assert.deepEqual(response.data, {a: 1});
 });
 
+test('responses without a body skip JSON parsing and cache empty text', async () => {
+    // A native HEAD response has a null body even when its status is 200.
+    for (const status of [200, 204, 205, 304]) {
+        const response = await respondWith(new Response(null, {
+            status, headers: {'Content-Type': 'application/json'}
+        }));
+
+        assert.equal(response.data, '');
+        assert.equal(response.getData(), '');
+        assert.equal(await response.getResponseData(), '');
+    }
+});
+
+test('empty, whitespace-only and malformed JSON bodies reject', async () => {
+    for (const body of ['', '{broken', '   ']) {
+        await assert.rejects(respondWith(new Response(body, {
+            headers: {'Content-Type': 'application/json'}
+        })), SyntaxError);
+    }
+});
+
 test('responses with Content-Disposition are read as a Blob', async () => {
     const response = await respondWith(new Response('file body', {
         headers: {'Content-Disposition': 'attachment; filename="a.txt"', 'Content-Type': 'text/plain'}
