@@ -3,7 +3,8 @@ import StandardObjectType from "@src/type/StandardObjectType";
 type GetRequestConfig = {
     url: string;
     query?: StandardObjectType | URLSearchParams;
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    timeout?: number
 }
 
 export default GetRequestConfig;
